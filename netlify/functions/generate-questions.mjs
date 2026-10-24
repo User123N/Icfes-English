@@ -9,8 +9,8 @@ const MAX_COUNT = 20;
 const timeoutSignal = (ms) => AbortSignal.timeout(ms);
 
 async function authorize(event) {
-  const url = (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/\/$/, '');
-  const anonKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_ANONKEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
+  const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '').replace(/\/$/, '');
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_ANONKEY || '';
   const auth = event.headers?.authorization || event.headers?.Authorization || '';
   const token = auth.match(/^Bearer\s+(.+)$/i)?.[1];
   if (!url || !anonKey) return { error: fail(503, 'La autenticación del servidor no está configurada. Define SUPABASE_URL y SUPABASE_ANON_KEY (o NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) en Netlify.') };
@@ -21,7 +21,11 @@ async function authorize(event) {
     const user = await userRes.json();
     if (!user?.id) return { error: fail(401, 'No se pudo validar la identidad de la sesión.') };
     const profileRes = await fetch(`${url}/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}&select=id,role&limit=1`, { headers: { apikey: anonKey, Authorization: `Bearer ${token}` }, signal: timeoutSignal(5000) });
-    if (!profileRes.ok) return { error: fail(403, 'No fue posible verificar los permisos del docente.') };
+    if (!profileRes.ok) {
+      const profileError = await profileRes.json().catch(() => ({}));
+      if (profileRes.status === 404 || profileError?.code === 'PGRST205') return { error: fail(503, 'Falta la tabla public.profiles en Supabase. Ejecuta backend/schema.sql en el proyecto configurado en Netlify y recarga la caché del esquema.') };
+      return { error: fail(403, 'No fue posible verificar los permisos del docente. Revisa la tabla profiles y sus políticas RLS.') };
+    }
     const profiles = await profileRes.json();
     if (!Array.isArray(profiles) || profiles.length !== 1 || profiles[0].id !== user.id || profiles[0].role !== 'teacher_admin') return { error: fail(403, 'Esta cuenta no tiene el rol docente autorizado.') };
     return { user };

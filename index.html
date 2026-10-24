@@ -321,19 +321,36 @@ body.presentation-mode .game-top{font-size:16px}
 <div id="icfes-auth-toolbar" hidden><span id="icfes-auth-user"></span><button id="icfes-auth-logout" type="button">Cerrar sesión</button></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-(function(){
- const SUPABASE_URL='https://eenyhkafkhwbbazzjkyk.supabase.co';
- const SUPABASE_ANON_KEY='sb_publishable_-shXEneWr4ku_pZ2P3c5BA_N6W0ZZtT';
+(async function(){
  const gate=document.getElementById('icfes-auth-gate'), form=document.getElementById('icfes-auth-card'), msg=document.getElementById('icfes-auth-message'), submit=document.getElementById('icfes-auth-submit'), toolbar=document.getElementById('icfes-auth-toolbar');
- if(!window.supabase||!window.supabase.createClient){msg.textContent='No se pudo cargar el SDK de Supabase. Comprueba la conexión a internet.';return;}
- const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+ const showError=(text)=>{msg.textContent=text;gate.hidden=false;toolbar.hidden=true;};
+ if(!window.supabase||!window.supabase.createClient){showError('No se pudo cargar el SDK de Supabase. Comprueba la conexión a internet y recarga la página.');return;}
+ let client;
+ try {
+   const response=await fetch('/.netlify/functions/public-config',{headers:{'Accept':'application/json'},cache:'no-store'});
+   const config=await response.json().catch(()=>({}));
+   if(!response.ok) throw new Error(config.error||'Netlify no está entregando la configuración pública de Supabase.');
+   const url=String(config.supabaseUrl||'').trim();
+   const key=String(config.supabasePublishableKey||'').trim();
+   if(!url||!key) throw new Error('Faltan NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY en las variables de entorno de Netlify.');
+   client=window.supabase.createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+ } catch(err) {
+   showError(err?.message||'No se pudo cargar la configuración de Supabase.');
+   return;
+ }
  let verified=false;
  async function verify(session){
-   verified=false; gate.hidden=false; toolbar.hidden=true;
+   verified=false;gate.hidden=false;toolbar.hidden=true;
    if(!session){msg.textContent='';return false;}
    const {data,error}=await client.from('profiles').select('id,role,display_name').eq('id',session.user.id).maybeSingle();
-   if(error||!data||data.role!=='teacher_admin'){
-     msg.textContent='Esta cuenta no está autorizada como docente. Solicita al administrador que asigne el rol en Supabase.';
+   if(error){
+     if(error.code==='PGRST205') showError('Falta la tabla public.profiles en este proyecto de Supabase. Ejecuta backend/schema.sql en el SQL Editor del mismo proyecto y recarga.');
+     else if(error.code==='42501') showError('Supabase bloqueó la lectura del perfil. Revisa las políticas RLS de public.profiles ejecutando la migración de reparación incluida en el proyecto.');
+     else showError('No se pudo consultar el perfil docente en Supabase. Código: '+(error.code||'desconocido')+'. Revisa la configuración y las políticas de la tabla profiles.');
+     return false;
+   }
+   if(!data||data.role!=='teacher_admin'){
+     showError('La cuenta inició sesión, pero no tiene un perfil docente autorizado en este proyecto. Verifica public.profiles y el ID del usuario en Authentication → Users.');
      await client.auth.signOut();return false;
    }
    verified=true;gate.hidden=true;toolbar.hidden=false;document.getElementById('icfes-auth-user').textContent=data.display_name||session.user.email||'Docente';
@@ -341,13 +358,15 @@ body.presentation-mode .game-top{font-size:16px}
    return true;
  }
  form.addEventListener('submit',async e=>{e.preventDefault();submit.disabled=true;submit.textContent='Verificando…';msg.textContent='Validando credenciales y permisos…';
-   try{const {data,error}=await client.auth.signInWithPassword({email:document.getElementById('icfes-auth-email').value.trim(),password:document.getElementById('icfes-auth-password').value});if(error)throw error;const ok=await verify(data.session);if(!ok&&data.session)msg.textContent='Inicio de sesión realizado, pero la cuenta no tiene permisos de docente.';}
-   catch(err){msg.textContent='No se pudo iniciar sesión. Verifica el correo, la contraseña y la configuración de Auth.';}
+   try{const {data,error}=await client.auth.signInWithPassword({email:document.getElementById('icfes-auth-email').value.trim(),password:document.getElementById('icfes-auth-password').value});if(error)throw error;await verify(data.session);}
+   catch(err){msg.textContent='No se pudo iniciar sesión. Verifica el correo, la contraseña y que Email/Password esté habilitado en Supabase Auth.';}
    finally{submit.disabled=false;submit.textContent='Iniciar sesión';}
  });
  document.getElementById('icfes-auth-logout').addEventListener('click',async()=>{await client.auth.signOut();verified=false;gate.hidden=false;toolbar.hidden=true;msg.textContent='Has cerrado sesión.';});
- client.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'){verified=false;gate.hidden=false;toolbar.hidden=true;} else if(session&&!verified){setTimeout(()=>verify(session),0);}});
- client.auth.getSession().then(({data})=>verify(data.session));
+ client.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'){verified=false;gate.hidden=false;toolbar.hidden=true;}else if(session&&!verified){setTimeout(()=>verify(session),0);}});
+ const {data:sessionData,error:sessionError}=await client.auth.getSession();
+ if(sessionError) showError('No se pudo recuperar la sesión de Supabase. Recarga la página e inténtalo de nuevo.');
+ else await verify(sessionData.session);
  window.icfesAuthReady=()=>verified;
 })();
 </script>

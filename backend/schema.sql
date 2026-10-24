@@ -12,8 +12,9 @@ create table if not exists public.profiles (
 );
 
 create or replace function public.is_teacher_admin()
-returns boolean language sql stable security definer set search_path = public, pg_temp
-as $$ select exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'teacher_admin'); $$;
+returns boolean
+language sql stable security definer set search_path = ''
+as $$ select exists (select 1 from public.profiles p where p.id = (select auth.uid()) and p.role = 'teacher_admin'); $$;
 revoke all on function public.is_teacher_admin() from public;
 grant execute on function public.is_teacher_admin() to authenticated;
 
@@ -101,15 +102,24 @@ alter table public.content_versions enable row level security;
 alter table public.audit_logs enable row level security;
 
 -- Cerrar lectura/escritura pública: solo sesión del docente con perfil autorizado.
-create policy "teacher admin reads own profile" on public.profiles for select to authenticated using (id = auth.uid() and public.is_teacher_admin());
+drop policy if exists "teacher admin reads own profile" on public.profiles;
+create policy "teacher admin reads own profile" on public.profiles for select to authenticated using (id = (select auth.uid()));
 -- No hay política de UPDATE/INSERT/DELETE para perfiles: un usuario no puede asignarse el rol.
+drop policy if exists "teacher admin manages questions" on public.questions;
 create policy "teacher admin manages questions" on public.questions for all to authenticated using (public.is_teacher_admin()) with check (public.is_teacher_admin());
+drop policy if exists "teacher admin manages drafts" on public.question_drafts;
 create policy "teacher admin manages drafts" on public.question_drafts for all to authenticated using (public.is_teacher_admin()) with check (public.is_teacher_admin());
+drop policy if exists "teacher admin manages settings" on public.site_settings;
 create policy "teacher admin manages settings" on public.site_settings for all to authenticated using (public.is_teacher_admin()) with check (public.is_teacher_admin());
+drop policy if exists "teacher admin manages page configs" on public.page_configs;
 create policy "teacher admin manages page configs" on public.page_configs for all to authenticated using (public.is_teacher_admin()) with check (public.is_teacher_admin());
+drop policy if exists "teacher admin manages media" on public.media_assets;
 create policy "teacher admin manages media" on public.media_assets for all to authenticated using (public.is_teacher_admin()) with check (public.is_teacher_admin());
+drop policy if exists "teacher admin manages versions" on public.content_versions;
 create policy "teacher admin manages versions" on public.content_versions for all to authenticated using (public.is_teacher_admin()) with check (public.is_teacher_admin());
+drop policy if exists "teacher admin reads audit" on public.audit_logs;
 create policy "teacher admin reads audit" on public.audit_logs for select to authenticated using (public.is_teacher_admin());
+drop policy if exists "teacher admin writes audit" on public.audit_logs;
 create policy "teacher admin writes audit" on public.audit_logs for insert to authenticated with check (public.is_teacher_admin() and actor_id = auth.uid());
 
 -- Tras crear la cuenta docente en Supabase Auth, asigna el perfil desde SQL Editor confiable:
@@ -117,3 +127,12 @@ create policy "teacher admin writes audit" on public.audit_logs for insert to au
 -- select id, 'Docente', 'teacher_admin' from auth.users where email = 'CORREO_DOCENTE';
 -- Elimina o reemplaza el correo de ejemplo antes de ejecutar.
 -- Configura también Storage privado y sus políticas; este archivo no abre buckets.
+
+
+-- Privilegios SQL: RLS sigue decidiendo qué filas puede ver/modificar cada sesión.
+grant usage on schema public to authenticated;
+grant select on public.profiles to authenticated;
+grant select, insert, update, delete on public.questions, public.question_drafts, public.site_settings, public.page_configs, public.media_assets, public.content_versions, public.audit_logs to authenticated;
+
+-- Recarga la caché de PostgREST para que la API detecte las tablas recién creadas.
+notify pgrst, 'reload schema';

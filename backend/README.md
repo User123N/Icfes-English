@@ -21,13 +21,13 @@ AI_API_URL=https://api.openai.com/v1/chat/completions  # opcional
 ```
 
 ## Esquema
-`schema.sql` es para un proyecto Supabase NUEVO o de prueba. No lo ejecutes encima de una base con datos sin respaldo y revisión. Después de crear la cuenta del docente en Supabase Auth, asigna el perfil `teacher_admin` mediante el SQL de ejemplo del archivo. No hay políticas para que un usuario se cambie a sí mismo el rol.
+Ejecuta `schema.sql` en el proyecto Supabase que está configurado en Netlify. Si falta `public.profiles`, puedes ejecutar `migrations/20261024_repair_profiles_auth.sql`. Después asigna el rol solo al usuario autorizado con `assign-teacher-admin.example.sql`. `schema.sql` es para un proyecto Supabase nuevo o de prueba. No lo ejecutes encima de una base con datos sin respaldo y revisión. Después de crear la cuenta del docente en Supabase Auth, asigna el perfil `teacher_admin` mediante el SQL de ejemplo del archivo. No hay políticas para que un usuario se cambie a sí mismo el rol.
 
 ## Estado real de esta entrega
-- La página tiene una interfaz adaptada a uso docente y modo de proyección.
-- La generación de preguntas puede llamar a una Netlify Function, pero debe protegerse con autenticación de docente antes de producción.
+- La página usa Supabase Auth para el inicio de sesión y consulta `public.profiles` para autorizar `teacher_admin`.
+- `netlify/functions/public-config.mjs` entrega al navegador únicamente URL y clave pública; la clave privada de OpenAI permanece en `generate-questions.mjs` del servidor.
+- La generación de preguntas valida la sesión y el rol docente en el servidor.
 - El banco y los borradores del HTML todavía usan `localStorage`; no están sincronizados con Supabase.
-- El inicio de sesión real del docente y el guardado remoto aún deben integrarse y probarse.
 - El modo proyección es una ayuda de presentación; la API Fullscreen puede depender de permisos del navegador.
 
 ## Antes de publicar

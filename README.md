@@ -11,10 +11,10 @@ Proyecto original conservado: la aplicación sigue en `index.html`, con sus herr
 
 ## Configuración de Supabase
 
-1. En Supabase, abre **SQL Editor** y revisa `backend/schema.sql` antes de ejecutarlo. El script crea tablas y políticas si no existen; no borra tablas ni filas. No lo ejecutes sin revisar si ya tienes objetos con esos nombres.
+1. En Supabase, abre **SQL Editor** del mismo proyecto que se configurará en Netlify y ejecuta `backend/schema.sql`. Crea las tablas y políticas que necesita la app; no borra tablas ni filas. El archivo ahora puede volver a ejecutarse sin fallar por políticas duplicadas. Haz una copia de seguridad y revisa objetos existentes antes de producción. Si solo falta recuperar `profiles`, también está `backend/migrations/20261024_repair_profiles_auth.sql`.
 2. En **Authentication → Providers → Email**, habilita Email/Password.
 3. Crea la cuenta docente en **Authentication → Users**. Mantén deshabilitado el registro público si no necesitas nuevas cuentas.
-4. Después de crearla, abre SQL Editor y asigna el rol a esa cuenta desde un entorno administrativo confiable, sustituyendo el correo:
+4. Después de crearla, abre SQL Editor y ejecuta `backend/assign-teacher-admin.example.sql` desde un entorno administrativo confiable, sustituyendo el correo por el de la cuenta autorizada. El script devuelve/actualiza solo el perfil del usuario que coincida:
 
    ```sql
    insert into public.profiles (id, display_name, role)
@@ -31,13 +31,13 @@ Proyecto original conservado: la aplicación sigue en `index.html`, con sus herr
 
 En **Site configuration → Environment variables**, crea:
 
-- `NEXT_PUBLIC_SUPABASE_URL` = `https://eenyhkafkhwbbazzjkyk.supabase.co` (la función acepta también `SUPABASE_URL`)
+- `NEXT_PUBLIC_SUPABASE_URL` = `https://TU_PROYECTO.supabase.co` (la función acepta también `SUPABASE_URL`)
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` = la clave pública `sb_publishable_...` del mismo proyecto (la función acepta también `SUPABASE_ANON_KEY`)
 - `AI_PROVIDER_API_KEY` = una clave privada nueva de OpenAI, creada y pegada directamente en Netlify
 - `AI_MODEL` = modelo disponible en tu cuenta; por defecto se usa `gpt-4o-mini`, pero confirma disponibilidad en tu cuenta
 - `AI_API_URL` = opcional; si se omite, usa `https://api.openai.com/v1/chat/completions`
 
-No pegues la clave privada de OpenAI en el chat, en el HTML, en GitHub ni en `.env.example`. Después de cambiar variables, vuelve a desplegar el sitio. Para desarrollo local puedes copiar `.env.example` a `.env` (sin subirlo a Git) y usar `netlify dev`; instala la CLI de Netlify localmente si aún no la tienes.
+No pegues la clave privada de OpenAI en el chat, en el HTML, en GitHub ni en `.env.example`. Después de cambiar variables, vuelve a desplegar el sitio. Para desarrollo local copia `.env.example` a `.env` (sin subirlo a Git) y usa `netlify dev`; instala la CLI de Netlify localmente si aún no la tienes.
 
 ## Despliegue en Netlify
 
@@ -46,6 +46,10 @@ No pegues la clave privada de OpenAI en el chat, en el HTML, en GitHub ni en `.e
 3. Usa directorio de publicación `.` y directorio de funciones `netlify/functions` (ya indicado en `netlify.toml`). No hay paso de build para el HTML estático.
 4. Añade las variables anteriores y ejecuta Deploy.
 5. Abre el sitio HTTPS, inicia sesión con el usuario de Supabase que tenga perfil `teacher_admin`, y prueba el generador. La generación solo crea borradores para revisión; no los publica automáticamente.
+
+## Recuperar errores de Supabase
+
+Si aparece `PGRST205` (no existe `public.profiles`), ejecuta `backend/schema.sql` en el SQL Editor del proyecto cuya URL aparece en Netlify, o la migración de reparación si el resto del esquema ya está instalado. Después de crear la tabla, el SQL envía `NOTIFY pgrst, 'reload schema'` para refrescar la caché REST. Si una cuenta no tiene perfil, crea el usuario en Auth y asígnale `teacher_admin` desde SQL Editor; nunca permitas que el navegador cambie el rol.
 
 ## Pruebas locales
 
@@ -67,7 +71,11 @@ Las pruebas unitarias de la función usan respuestas simuladas de Supabase y Ope
 
 ## Archivos principales
 
-- `index.html`: aplicación original con el flujo de autenticación añadido.
+- `index.html`: aplicación original con autenticación docente y diagnóstico de errores de perfil.
+- `netlify/functions/public-config.mjs`: entrega únicamente la URL y clave pública de Supabase al navegador; no devuelve claves privadas.
+- `backend/migrations/20261024_repair_profiles_auth.sql`: reparación idempotente de la tabla y política de lectura del perfil.
+- `backend/assign-teacher-admin.example.sql`: asignación explícita del rol docente desde SQL Editor confiable.
+- `backend/RECUPERAR_ACCESO_DOCENTE.md`: pasos para reparar variables, tabla, perfil y despliegue.
 - `netlify/functions/generate-questions.mjs`: endpoint de IA protegido.
 - `backend/schema.sql`: tablas y políticas RLS preparadas.
 - `backend/README-generador-ia.md`: notas de IA.
