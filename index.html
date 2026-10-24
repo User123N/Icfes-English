@@ -317,11 +317,62 @@ body.presentation-mode .game-top{font-size:16px}
 </style>
 
 <style id="pulo-results-size-fix">
-/* Avatar de Pulo: tamaño acotado sin alterar el texto de resultados. */
-#puloFinalMessage { display:flex; align-items:flex-start; gap:16px; width:100%; max-width:900px; margin:24px auto 12px; box-sizing:border-box; }
-#puloFinalMessage img, #puloFinalMessage .pulo-final-avatar img { width:clamp(64px, 9vw, 96px); height:clamp(64px, 9vw, 96px); max-width:96px; object-fit:contain; flex:0 0 auto; }
-#puloFinalMessage p, #puloFinalMessage .message, #puloFinalMessage .pulo-final-text { min-width:0; overflow-wrap:anywhere; }
-@media(max-width:560px){#puloFinalMessage{gap:12px;flex-wrap:wrap} #puloFinalMessage img,#puloFinalMessage .pulo-final-avatar img{width:72px;height:72px}}
+/* Resultados: avatar compacto a la izquierda y texto legible a la derecha. */
+#puloFinalMessage.pulo-final-message {
+  display: grid !important;
+  grid-template-columns: 88px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 16px !important;
+  width: 100% !important;
+  max-width: 900px !important;
+  min-width: 0 !important;
+  margin: 24px auto 12px !important;
+  padding: 16px !important;
+  box-sizing: border-box !important;
+}
+#puloFinalMessage .pulo-final-avatar {
+  width: 88px !important;
+  height: 104px !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  border-radius: 12px !important;
+  align-self: center !important;
+}
+#puloFinalMessage .pulo-final-avatar img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  object-fit: cover !important;
+  object-position: center top !important;
+}
+#puloFinalMessage .pulo-final-bubble {
+  display: block !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+}
+#puloFinalMessage .pulo-final-bubble p {
+  margin: 0 !important;
+  line-height: 1.65 !important;
+  font-size: 14px !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+}
+@media(max-width:560px) {
+  #puloFinalMessage.pulo-final-message {
+    grid-template-columns: 68px minmax(0, 1fr) !important;
+    gap: 12px !important;
+    padding: 12px !important;
+  }
+  #puloFinalMessage .pulo-final-avatar {
+    width: 68px !important;
+    height: 84px !important;
+  }
+  #puloFinalMessage .pulo-final-bubble p { font-size: 13px !important; }
+}
 </style>
 
 </head>
