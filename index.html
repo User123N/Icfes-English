@@ -218,6 +218,16 @@ body:after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;backg
 @keyframes bounce{40%{transform:translateY(-8px) scale(1.04)}}
 .pcard .bubble{font-size:13px;padding:11px 14px}.pcard .nm{font-size:10px;letter-spacing:.18em;font-weight:800;color:#ff5364;margin-bottom:6px}
 .pfade{animation:pswap .45s var(--ease)}@keyframes pswap{from{opacity:0;transform:scale(.94) translateY(8px)}}
+/* Avatar de Pulo visible junto a cada respuesta y al terminar la sesión. */
+.pulo-inline-feedback,.pulo-final-message{display:grid;grid-template-columns:100px minmax(0,1fr);gap:16px;align-items:center;margin:18px 0;padding:18px;border:1px solid #ff536444;border-radius:20px;background:linear-gradient(120deg,#e3263618,#111318);box-shadow:0 12px 30px #0003;animation:rise .45s ease both}
+.pulo-inline-avatar,.pulo-final-avatar{width:100px;height:120px;overflow:hidden;border-radius:15px;border:1px solid #ff536455;background:#17191f}
+.pulo-inline-avatar img,.pulo-final-avatar img{width:100%;height:100%;object-fit:cover;object-position:center top}
+.pulo-inline-name{font-size:10px;letter-spacing:.12em;font-weight:900;color:#ff6877;margin-bottom:8px}
+.pulo-inline-bubble p,.pulo-final-bubble p{margin:0;font-size:14px;line-height:1.75;color:#f5f5f7}
+.pulo-final-message{margin:24px auto;max-width:900px;grid-template-columns:clamp(110px,17%,160px) minmax(0,1fr);padding:22px}
+.pulo-final-avatar{width:100%;height:170px}
+@media(max-width:560px){.pulo-inline-feedback{grid-template-columns:82px minmax(0,1fr);gap:12px;padding:12px}.pulo-inline-avatar{width:82px;height:100px}.pulo-inline-bubble p,.pulo-final-bubble p{font-size:12px}.pulo-final-message{grid-template-columns:88px minmax(0,1fr);gap:12px;padding:14px}.pulo-final-avatar{height:120px}}
+
 .fab{position:fixed;right:18px;bottom:18px;z-index:70;width:64px;height:64px;border-radius:50%;padding:0;border:2px solid #e32636;background:#0d0f14;overflow:hidden;box-shadow:0 12px 34px -6px #e32636aa;transition:transform .25s var(--ease)}.fab:hover{transform:scale(1.08)}.fab img{width:100%;height:100%;object-fit:cover}
 .fab:after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid #ff5364;animation:ping 2.6s infinite;pointer-events:none}@keyframes ping{to{transform:scale(1.5);opacity:0}}
 .fpanel{position:fixed;right:18px;bottom:94px;z-index:70;width:min(340px,calc(100vw - 36px));background:#0d0f14f2;backdrop-filter:blur(16px);border:1px solid #ffffff1c;border-radius:22px;padding:16px;box-shadow:0 30px 80px #000c;display:none}.fpanel.open{display:block;animation:pswap .35s var(--ease)}
@@ -620,6 +630,27 @@ document.addEventListener('pointermove',function(e){if(rm)return;var s=$('stage'
 /* ---- tarjeta en el examen ---- */
 function card(){var a=document.querySelector('.game-aside');if(a&&!$('pAv'))a.insertAdjacentHTML('afterbegin','<div class="pcard"><div class="pav" id="pAv"></div><div><div class="nm" id="pNm"></div><div class="bubble" id="pTip" aria-live="polite"></div></div></div>');if($('pNm'))$('pNm').textContent=C.name.toUpperCase()+' · PISTA'}
 function say(k,t,cls){if(!$('pAv'))return;var a=$('pAv');a.className='pav'+(cls?' '+cls:'');a.innerHTML='<div class="pfade" style="height:100%">'+'<img class="pph" src="'+pick('pregunta',k)+'" alt="'+C.name+'">'+'</div>';$('pTip').textContent=t}
+/* Puente público para que el motor principal pueda invocar el avatar de Pulo sin perder las funciones visuales. */
+window.__puloAvatarBridge={
+ question:function(){card();say(state.current%2?'think':'tip',tips[ti++%tips.length]);},
+ answer:function(q,selected){
+  card();var good=Number(selected)===Number(q.correct);var explanation=String(q.explanation||'Revisa el contexto para identificar la mejor respuesta.');
+  say(good?'correct':'wrong',good?'¡Muy bien! Elegiste la respuesta correcta.':('Vamos a revisar esta respuesta. '+explanation.slice(0,180)),good?'ok':'no');
+  var old=document.getElementById('puloInlineFeedback');if(old)old.remove();
+  var fb=document.getElementById('feedback');if(!fb)return;
+  var node=document.createElement('section');node.id='puloInlineFeedback';node.className='pulo-inline-feedback';
+  node.innerHTML='<div class="pulo-inline-avatar"><img class="pph" src="'+pick('pregunta',good?'correct':'wrong')+'" alt="'+String(C.name).replace(/[&<>\"]/g,'')+'"></div><div class="pulo-inline-bubble"><div class="pulo-inline-name">'+String(C.name).replace(/[&<>]/g,'')+' · '+(good?'¡CORRECTO!':'REPASEMOS')+'</div><p>'+String(good?'¡Excelente! Sigue aplicando esa estrategia.':explanation).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</p></div>';
+  fb.insertAdjacentElement('afterend',node);
+ },
+ result:function(){
+  var root=document.querySelector('#gameMain .result-screen');if(!root)return;
+  var old=document.getElementById('puloFinalMessage');if(old)old.remove();
+  var n=root.querySelector('.result-ring strong');var score=n?parseInt(n.textContent,10)||0:0;var good=score>=70;
+  var node=document.createElement('section');node.id='puloFinalMessage';node.className='pulo-final-message';
+  node.innerHTML='<div class="pulo-final-avatar"><img class="pph" src="'+pick('resultados',good?'celebrate':'cheer')+'" alt="'+String(C.name).replace(/[&<>\"]/g,'')+'"></div><div class="pulo-final-bubble"><div class="pulo-inline-name">'+String(C.name).replace(/[&<>]/g,'')+' · MENSAJE FINAL</div><p>'+ (good?'¡Excelente trabajo! Has demostrado lo que sabes. Sigue practicando para mantener ese progreso.':'¡Buen esfuerzo! Cada pregunta te ayuda a mejorar. Revisa las explicaciones y vuelve a intentarlo.')+'</p></div>';
+  root.appendChild(node);
+ }
+};
 var _rq=renderQuestion;renderQuestion=function(){_rq();card();say(state.current%2?'think':'tip',tips[ti++%tips.length])};
 var _ca=checkAnswer;checkAnswer=function(){var c=state.checked,s=state.selected,q=gameQuestions[state.current];_ca();if(!c&&s!==null&&q){var g=s===Number(q.correct);say(g?'correct':'wrong',g?'¡Eso es! Bien leído. Sigue así.':'Esa no era, pero así se aprende. '+(q.explanation?String(q.explanation).slice(0,130):'Revisa la explicación y sigue.'),g?'ok':'no')}};
 /* ---- resultados ---- */
@@ -831,10 +862,33 @@ document.querySelectorAll('.admin-tab').forEach(b=>b.addEventListener('click',()
   window.selectOption=core.selectOption;
   window.updateSessionStats=core.updateSessionStats;
   window.renderResult=core.renderResult;
+  var pulo=window.__puloAvatarBridge;
+  var baseRender=core.renderQuestion;
+  window.renderQuestion=function(){var out=baseRender.apply(this,arguments);if(pulo)pulo.question();return out;};
+  var baseCheck=core.checkAnswer;
+  window.checkAnswer=function(){
+    var q=typeof gameQuestions!=='undefined'?gameQuestions[state.current]:null;
+    var selected=state.selected;
+    var before=q&&typeof sessionReview!=='undefined'?sessionReview[q.id]:null;
+    var wasChecked=!!(before&&before.checked);
+    var out=baseCheck.apply(this,arguments);
+    if(pulo){
+      if(q&&!wasChecked&&selected!==null&&typeof sessionReview!=='undefined'&&sessionReview[q.id]&&sessionReview[q.id].checked)pulo.answer(q,selected);
+      else if(document.querySelector('#gameMain .result-screen'))pulo.result();
+      else pulo.question();
+    }
+    return out;
+  };
+  var baseSkip=core.skipQuestion;
+  window.skipQuestion=function(){var out=baseSkip.apply(this,arguments);if(pulo){if(document.querySelector('#gameMain .result-screen'))pulo.result();else pulo.question();}return out;};
+  var baseResult=core.renderResult;
+  window.renderResult=function(){var out=baseResult.apply(this,arguments);if(pulo)pulo.result();return out;};
   window.startPractice=function(partId){
     var gameMain=document.getElementById('gameMain');
     if(gameMain&&window.__teacherGameMainHTML)gameMain.innerHTML=window.__teacherGameMainHTML;
-    return core.startPractice(partId);
+    var out=core.startPractice(partId);
+    if(pulo)pulo.question();
+    return out;
   };
 })();
 </script></body></html>
