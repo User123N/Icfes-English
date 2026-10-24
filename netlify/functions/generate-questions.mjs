@@ -9,11 +9,11 @@ const MAX_COUNT = 20;
 const timeoutSignal = (ms) => AbortSignal.timeout(ms);
 
 async function authorize(event) {
-  const url = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
-  const anonKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_ANONKEY || '';
+  const url = (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/\/$/, '');
+  const anonKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_ANONKEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
   const auth = event.headers?.authorization || event.headers?.Authorization || '';
   const token = auth.match(/^Bearer\s+(.+)$/i)?.[1];
-  if (!url || !anonKey) return { error: fail(503, 'La autenticación del servidor no está configurada. Define SUPABASE_URL y SUPABASE_ANON_KEY en Netlify.') };
+  if (!url || !anonKey) return { error: fail(503, 'La autenticación del servidor no está configurada. Define SUPABASE_URL y SUPABASE_ANON_KEY (o NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) en Netlify.') };
   if (!token || token.length > 8192) return { error: fail(401, 'Inicia sesión con una cuenta docente autorizada.') };
   try {
     const userRes = await fetch(`${url}/auth/v1/user`, { headers: { apikey: anonKey, Authorization: `Bearer ${token}` }, signal: timeoutSignal(5000) });

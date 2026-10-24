@@ -25,14 +25,14 @@ Proyecto original conservado: la aplicación sigue en `index.html`, con sus herr
 
    Si ya existe el perfil, usa una actualización manual revisada en lugar de insertar duplicados. No habilites una política que permita a usuarios modificar su propio `role`.
 5. La aplicación consulta `profiles` al iniciar sesión; la función también valida el token con Supabase Auth y verifica el rol en el servidor. Una sesión válida sin el perfil `teacher_admin` no obtiene acceso.
-6. La clave `sb_publishable_...` es una clave pública de cliente, no una clave `service_role`. Se usa en el navegador. La función usa la misma clave pública como `SUPABASE_ANON_KEY` para verificar usuarios con su JWT. Nunca configures `service_role` en el cliente.
+6. La clave `sb_publishable_...` es una clave pública de cliente, no una clave `service_role`. Se usa en el navegador. La función acepta la clave pública como `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` o `SUPABASE_ANON_KEY` para verificar usuarios con su JWT. Nunca configures `service_role` en el cliente.
 
 ## Variables de entorno en Netlify
 
 En **Site configuration → Environment variables**, crea:
 
-- `SUPABASE_URL` = `https://enncvhybilvpydswvekm.supabase.co`
-- `SUPABASE_ANON_KEY` = la clave pública `sb_publishable_...` de tu proyecto
+- `NEXT_PUBLIC_SUPABASE_URL` = `https://eenyhkafkhwbbazzjkyk.supabase.co` (la función acepta también `SUPABASE_URL`)
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` = la clave pública `sb_publishable_...` del mismo proyecto (la función acepta también `SUPABASE_ANON_KEY`)
 - `AI_PROVIDER_API_KEY` = una clave privada nueva de OpenAI, creada y pegada directamente en Netlify
 - `AI_MODEL` = modelo disponible en tu cuenta; por defecto se usa `gpt-4o-mini`, pero confirma disponibilidad en tu cuenta
 - `AI_API_URL` = opcional; si se omite, usa `https://api.openai.com/v1/chat/completions`
