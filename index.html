@@ -315,6 +315,15 @@ body.presentation-mode .game-top{font-size:16px}
 @media(max-width:700px){.top-actions{gap:6px}.top-actions button{padding:10px 12px;font-size:12px}.hero{padding:24px!important}}
 
 </style>
+
+<style id="pulo-results-size-fix">
+/* Avatar de Pulo: tamaño acotado sin alterar el texto de resultados. */
+#puloFinalMessage { display:flex; align-items:flex-start; gap:16px; width:100%; max-width:900px; margin:24px auto 12px; box-sizing:border-box; }
+#puloFinalMessage img, #puloFinalMessage .pulo-final-avatar img { width:clamp(64px, 9vw, 96px); height:clamp(64px, 9vw, 96px); max-width:96px; object-fit:contain; flex:0 0 auto; }
+#puloFinalMessage p, #puloFinalMessage .message, #puloFinalMessage .pulo-final-text { min-width:0; overflow-wrap:anywhere; }
+@media(max-width:560px){#puloFinalMessage{gap:12px;flex-wrap:wrap} #puloFinalMessage img,#puloFinalMessage .pulo-final-avatar img{width:72px;height:72px}}
+</style>
+
 </head>
 <body>
 <style>
@@ -715,8 +724,26 @@ var design=document.getElementById('admin-design');if(!design||document.getEleme
 var box=document.createElement('div');box.id='elementEditor';box.className='feature-card';box.style.marginTop='22px';box.innerHTML='<div class="eyebrow">CONTROL DETALLADO</div><h3>Editor de elementos de la página</h3><p class="muted small">Selecciona un elemento para cambiar su texto, mostrarlo u ocultarlo. Los cambios visuales se guardan en este navegador.</p><div class="form-grid"><div class="field"><label for="eeTarget">Elemento</label><select id="eeTarget"><option value="#heroTitle">Título principal</option><option value="#heroSubtitle">Descripción principal</option><option value="#heroArt">Imagen/arte principal</option><option value=".meet">Sección del profesor</option><option value="#homeParts">Tarjetas de las 7 partes</option><option value=".feature-row">Tarjetas de retos</option><option value="#page-game .game-aside">Panel lateral de preguntas</option><option value="#questionArea .options">Opciones de respuesta</option></select></div><div class="field"><label for="eeAction">Acción</label><select id="eeAction"><option value="show">Mostrar elemento</option><option value="hide">Ocultar elemento</option><option value="text">Reemplazar texto (si aplica)</option></select></div><div class="field full"><label for="eeText">Nuevo texto (solo para elementos de texto)</label><input id="eeText" placeholder="Escribe el texto que quieres mostrar"></div><div class="field full" style="display:flex;gap:8px;flex-wrap:wrap"><button class="primary" type="button" id="eeApply">Aplicar al elemento</button><button class="ghost-btn" type="button" id="eeReset">Restaurar elementos</button></div></div><p class="muted small" id="eeStatus" aria-live="polite"></p>';
 design.appendChild(box);
 var key='icfes_element_edits_v1';function get(){try{return JSON.parse(localStorage.getItem(key)||'{}')}catch(e){return {}}}function set(v){try{localStorage.setItem(key,JSON.stringify(v))}catch(e){}}
-function applySaved(){var edits=get();Object.keys(edits).forEach(function(sel){document.querySelectorAll(sel).forEach(function(el){if(el.closest&&el.closest('#admin-studio'))return;var d=edits[sel];el.style.display=d.hidden?'none':'';if(d.text&&/^(H1|H2|H3|P|BUTTON|SPAN)$/.test(el.tagName)&&el.children.length===0)el.textContent=d.text})})}
-function apply(){var sel=document.getElementById('eeTarget').value,action=document.getElementById('eeAction').value,text=document.getElementById('eeText').value.trim(),els=document.querySelectorAll(sel);if(!els.length){document.getElementById('eeStatus').textContent='Ese elemento no está visible en esta pantalla. Abre la sección correspondiente y vuelve a intentarlo.';return}var edits=get(),d=edits[sel]||{};if(action==='hide'){d.hidden=true;els.forEach(function(el){el.style.display='none'})}else if(action==='show'){d.hidden=false;els.forEach(function(el){el.style.display=''})}else{if(!text){document.getElementById('eeStatus').textContent='Escribe el nuevo texto primero.';return}d.text=text;els.forEach(function(el){if(!el.querySelector('img,button,input,select,textarea'))el.textContent=text})}edits[sel]=d;set(edits);document.getElementById('eeStatus').textContent='Cambio aplicado. Se guardó en este navegador.'}
+function applySaved(){
+  var edits=get(), changed=false;
+  Object.keys(edits).forEach(function(sel){
+    /* Older visual-editor versions stored DOM paths as JSON arrays, not CSS selectors.
+       Remove only those unusable entries, preserving all valid selector-based edits. */
+    if(typeof sel!=='string' || !sel.trim() || sel.charAt(0)==='[' || sel.charAt(0)==='{'){
+      delete edits[sel]; changed=true; return;
+    }
+    var els;
+    try { els=Array.prototype.slice.call(document.querySelectorAll(sel)); }
+    catch(err) { console.warn('Se omitió un selector guardado no válido:',sel,err); delete edits[sel]; changed=true; return; }
+    els.forEach(function(el){
+      var d=edits[sel]||{};
+      el.style.display=d.hidden?'none':'';
+      if(d.text && /^(H1|H2|H3|P|BUTTON|SPAN|DIV)$/.test(el.tagName) && !el.querySelector('img,button,input,select,textarea')) el.textContent=d.text;
+    });
+  });
+  if(changed) set(edits);
+}
+function apply(){var sel=document.getElementById('eeTarget').value,action=document.getElementById('eeAction').value,text=document.getElementById('eeText').value.trim(),els;try{els=document.querySelectorAll(sel)}catch(e){document.getElementById('eeStatus').textContent='Selector no válido. Elige un elemento de la lista.';return}if(!els.length){document.getElementById('eeStatus').textContent='Ese elemento no está visible en esta pantalla. Abre la sección correspondiente y vuelve a intentarlo.';return}var edits=get(),d=edits[sel]||{};if(action==='hide'){d.hidden=true;els.forEach(function(el){el.style.display='none'})}else if(action==='show'){d.hidden=false;els.forEach(function(el){el.style.display=''})}else{if(!text){document.getElementById('eeStatus').textContent='Escribe el nuevo texto primero.';return}d.text=text;els.forEach(function(el){if(!el.querySelector('img,button,input,select,textarea'))el.textContent=text})}edits[sel]=d;set(edits);document.getElementById('eeStatus').textContent='Cambio aplicado. Se guardó en este navegador.'}
 document.getElementById('eeApply').addEventListener('click',apply);document.getElementById('eeReset').addEventListener('click',function(){if(confirm('¿Restaurar todos los elementos modificados?')){localStorage.removeItem(key);document.querySelectorAll('#page-home .hero-copy,#heroArt,.meet,#homeParts,.feature-row,#page-game .game-aside,#questionArea .options').forEach(function(el){el.style.display=''});document.getElementById('eeStatus').textContent='Elementos restaurados.'}});
 applySaved();
 })();
@@ -892,35 +919,53 @@ document.querySelectorAll('.admin-tab').forEach(b=>b.addEventListener('click',()
   };
 })();
 </script><style>
-/* Resultados: ocultar únicamente el avatar lateral de la pantalla de juego */
-#page-game:has(#gameMain .result-screen) .game-aside { display:none !important; }
-#page-game:has(#gameMain .result-screen) .game-layout { grid-template-columns:minmax(0,1fr) !important; }
-/* Pulo al final: tamaño controlado y texto legible */
-#puloFinalMessage {
-  display:flex !important; align-items:center !important; justify-content:center !important;
-  gap:18px !important; width:100% !important; max-width:760px !important;
-  margin:24px auto 12px !important; padding:18px !important; box-sizing:border-box !important;
-  overflow:hidden !important; border-radius:18px;
-}
-#puloFinalMessage .pulo-final-avatar {
-  flex:0 0 96px !important; width:96px !important; max-width:96px !important;
-}
-#puloFinalMessage .pulo-final-avatar img,
-#puloFinalMessage .pulo-final-avatar .pph {
-  display:block !important; width:96px !important; height:96px !important;
-  max-width:96px !important; max-height:96px !important; object-fit:contain !important;
-}
-#puloFinalMessage .pulo-final-bubble { flex:1 1 0 !important; min-width:0 !important; overflow-wrap:anywhere !important; }
-#puloFinalMessage .pulo-final-bubble p { margin:8px 0 0 !important; line-height:1.6 !important; white-space:normal !important; }
-@media(max-width:560px) {
-  #puloFinalMessage { align-items:flex-start !important; gap:12px !important; padding:12px !important; }
-  #puloFinalMessage .pulo-final-avatar,
-  #puloFinalMessage .pulo-final-avatar img,
-  #puloFinalMessage .pulo-final-avatar .pph { flex-basis:72px !important; width:72px !important; height:72px !important; max-width:72px !important; max-height:72px !important; }
-}
-/* El chat flotante no debe aparecer; se conserva el avatar final */
-#fab, #fp, .fab, .fpanel { display:none !important; visibility:hidden !important; pointer-events:none !important; }
-/* Evita que cambios visuales guardados oculten o destruyan el panel Studio */
-#admin-studio { min-width:0; }
-#admin-studio .studio-shell { display:block; visibility:visible; opacity:1; }
+  /* Ocultar el avatar lateral únicamente durante los resultados */
+  #page-game:has(#gameMain .result-screen) .game-aside,
+  #page-game:has(#gameMain .res) .game-aside {
+    display: none !important;
+  }
+
+  /* Usar todo el ancho para los resultados */
+  #page-game:has(#gameMain .result-screen) .game-layout,
+  #page-game:has(#gameMain .res) .game-layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  /* Eliminar el botón flotante de Pulo y su ventana de chat */
+  #fab,
+  #fp,
+  .fab,
+  .fpanel {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  /* Mantener el avatar de Pulo debajo del resumen final */
+  #puloFinalMessage {
+    display: flex !important;
+    position: relative !important;
+    width: 100% !important;
+    max-width: 900px !important;
+    margin: 28px auto 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  #puloFinalMessage .pulo-final-avatar {
+    flex-shrink: 0;
+  }
+
+  #puloFinalMessage .pulo-final-avatar img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+
+  @media (max-width: 560px) {
+    #puloFinalMessage {
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+  }
 </style></body></html>
