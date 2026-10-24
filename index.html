@@ -891,4 +891,54 @@ document.querySelectorAll('.admin-tab').forEach(b=>b.addEventListener('click',()
     return out;
   };
 })();
-</script></body></html>
+</script><style>
+  /* Ocultar el avatar lateral únicamente durante los resultados */
+  #page-game:has(#gameMain .result-screen) .game-aside,
+  #page-game:has(#gameMain .res) .game-aside {
+    display: none !important;
+  }
+
+  /* Usar todo el ancho para los resultados */
+  #page-game:has(#gameMain .result-screen) .game-layout,
+  #page-game:has(#gameMain .res) .game-layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  /* Eliminar el botón flotante de Pulo y su ventana de chat */
+  #fab,
+  #fp,
+  .fab,
+  .fpanel {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  /* Mantener el avatar de Pulo debajo del resumen final */
+  #puloFinalMessage {
+    display: flex !important;
+    position: relative !important;
+    width: 100% !important;
+    max-width: 900px !important;
+    margin: 28px auto 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  #puloFinalMessage .pulo-final-avatar {
+    flex-shrink: 0;
+  }
+
+  #puloFinalMessage .pulo-final-avatar img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+
+  @media (max-width: 560px) {
+    #puloFinalMessage {
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+  }
+</style></body></html>
