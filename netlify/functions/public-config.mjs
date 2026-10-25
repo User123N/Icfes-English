@@ -24,5 +24,5 @@ export async function handler(event) {
   } catch {
     return json(503, { error: 'NEXT_PUBLIC_SUPABASE_URL no es una URL válida.' });
   }
-  return json(200, { supabaseUrl, supabasePublishableKey });
+  return json(200, { supabaseUrl, supabasePublishableKey, aiGenerationConfigured: Boolean((process.env.AI_PROVIDER_API_KEY || '').trim()) });
 }

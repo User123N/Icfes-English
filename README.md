@@ -81,3 +81,16 @@ Las pruebas unitarias de la función usan respuestas simuladas de Supabase y Ope
 - `backend/README-generador-ia.md`: notas de IA.
 - `.env.example`: nombres de variables, sin secretos privados.
 - `tests/`: pruebas unitarias con servicios simulados.
+
+
+## Configuración de generación segura con IA en Netlify
+
+La generación de preguntas usa `/.netlify/functions/generate-questions`. Para habilitarla:
+
+1. En Netlify abre **Site configuration → Environment variables**.
+2. Configura `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` y `AI_PROVIDER_API_KEY`. La última debe ser una clave válida del proveedor compatible con OpenAI y mantenerse únicamente en el servidor.
+3. Opcionalmente define `AI_MODEL` (por defecto `gpt-4o-mini`) y `AI_API_URL` (por defecto el endpoint oficial de OpenAI).
+4. Vuelve a desplegar el sitio para que Netlify reconstruya y publique las funciones.
+5. Inicia sesión con una cuenta cuyo perfil tenga el rol `teacher_admin` y prueba el generador en Studio avanzado.
+
+El panel consulta `public-config` para mostrar si la variable de IA está presente; este endpoint solo devuelve un indicador booleano, nunca la clave. No publiques archivos `.env.local` ni incluyas secretos en el ZIP del sitio.
