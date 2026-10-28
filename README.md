@@ -94,3 +94,22 @@ La generación de preguntas usa `/.netlify/functions/generate-questions`. Para h
 5. Inicia sesión con una cuenta cuyo perfil tenga el rol `teacher_admin` y prueba el generador en Studio avanzado.
 
 El panel consulta `public-config` para mostrar si la variable de IA está presente; este endpoint solo devuelve un indicador booleano, nunca la clave. No publiques archivos `.env.local` ni incluyas secretos en el ZIP del sitio.
+
+
+## Migración multi-prueba (27-10-2026)
+
+Para habilitar pruebas independientes, siete partes por prueba y sincronización de preguntas con Supabase, respalda la base de datos y ejecuta `backend/migrations/20261027_multiexam_multirole.sql` en el SQL Editor del proyecto. Esta migración agrega exámenes, partes, asignaciones, intentos, roles base y políticas RLS. No reemplaza una revisión de producción ni configura por sí sola pagos, facturación, almacenamiento de archivos o correos transaccionales. Configura las variables del archivo `.env.example` en Netlify; nunca publiques `.env.local` ni claves privadas.
+
+## Liberación programada de pruebas (v3)
+
+Para programar la disponibilidad de pruebas a una fecha futura, a un colegio o a estudiantes específicos:
+
+1. Haz una copia de seguridad de Supabase.
+2. Ejecuta en el SQL Editor la migración `backend/migrations/20261028_scheduled_exam_releases.sql` después de `20261027_multiexam_multirole.sql`.
+3. Verifica que la cuenta que administra la plataforma tenga un perfil autorizado y que las pruebas que se entregarán estén en estado `published`.
+4. Abre **Panel docente → Liberaciones**. Puedes programar fecha/hora de inicio y cierre opcional, desactivar o eliminar una liberación, crear colegios y matricular estudiantes mediante su UUID de Supabase Auth.
+5. Para liberar a un colegio, primero créalo y matricula sus estudiantes en la sección **Colegios y matrículas**. La fecha y el permiso se validan en la base de datos, no solo en la interfaz.
+
+Las fechas se guardan como `timestamptz`; la entrada `datetime-local` se interpreta en la zona horaria del dispositivo administrador y se convierte a UTC. Para que un estudiante pueda iniciar sesión y recibir una liberación, debe tener una cuenta y el perfil/rol correspondiente configurado en Supabase. No compartas claves `service_role` con el navegador.
+
+Esta función programa el acceso; no crea por sí sola cuentas de estudiante, pagos, suscripciones ni facturación. Verifica primero en un proyecto de prueba, especialmente las políticas RLS y las matrículas escolares, antes de usarla en producción.
