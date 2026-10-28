@@ -31,3 +31,14 @@ test('scheduled releases include teacher UI, date windows and school/student tar
   assert.match(releases,/create table if not exists public\.school_memberships/);
   assert.match(releases,/create policy "owners manage exam releases"/);
 });
+
+
+test('exam catalogue renders every saved exam and class mode selects an exam', async () => {
+  assert.match(html, /id="allParts"/);
+  assert.match(html, /function examCard\(exam\)/);
+  assert.match(html, /exams\.map\(examCard\)/);
+  assert.match(html, /id="classExamSelect"/);
+  assert.match(html, /function startExamPractice\(examId\)/);
+  assert.match(html, /function startPracticeInOriginalOrder\(\)/);
+  assert.match(html, /Todas tus <span class="gradient-text">pruebas/);
+});
