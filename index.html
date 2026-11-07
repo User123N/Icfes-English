@@ -419,8 +419,12 @@ body.presentation-mode .game-top{font-size:16px}
      else showError('No se pudo consultar el perfil docente en Supabase. Código: '+(error.code||'desconocido')+'. Revisa la configuración y las políticas de la tabla profiles.');
      return false;
    }
-   if(!data||data.role!=='teacher_admin'){
-     showError('La cuenta inició sesión, pero no tiene un perfil docente autorizado en este proyecto. Verifica public.profiles y el ID del usuario en Authentication → Users.');
+   if(data&&data.role==='student'){
+     window.location.replace('student.html');
+     return false;
+   }
+   if(!data||!['teacher_admin','teacher'].includes(data.role)){
+     showError('La cuenta no tiene un perfil docente autorizado. Verifica public.profiles y el rol asignado por el administrador.');
      await client.auth.signOut();return false;
    }
    verified=true;gate.hidden=true;toolbar.hidden=false;document.getElementById('icfes-auth-user').textContent=data.display_name||session.user.email||'Docente';
