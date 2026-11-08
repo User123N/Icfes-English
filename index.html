@@ -375,8 +375,37 @@ body.presentation-mode .game-top{font-size:16px}
 }
 </style>
 
+<style>
+
+/* ICFES English Lab — fondo Aurora animado */
+html { background: #040208 !important; }
+body {
+  background: transparent !important;
+  isolation: isolate;
+}
+#icfes-aurora-background {
+  position: fixed !important;
+  inset: 0 !important;
+  display: block !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: -2 !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+}
+#icfes-aurora-background canvas,
+#icfes-aurora-background > * {
+  max-width: 100% !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  #icfes-aurora-background { visibility: hidden; }
+}
+</style>
+<script type="module" src="https://gradients.sh/embed.js?v=35cce8510ba2"></script>
 </head>
 <body>
+<gradients-element id="icfes-aurora-background" params="%7B%22background%22%3A%22%23040208%22%2C%22blur%22%3A0.45%2C%22colors%22%3A%5B%22%23FFBDBD%22%2C%22%23FF3D3D%22%2C%22%23E60000%22%2C%22%23120a2a%22%5D%2C%22dither%22%3A%7B%22cell%22%3A3%2C%22enabled%22%3Afalse%2C%22levels%22%3A8%7D%2C%22grain%22%3A0.16%2C%22interaction%22%3A%7B%22pointer%22%3A0.2%2C%22scroll%22%3A0.2%7D%2C%22kind%22%3A%22aurora%22%2C%22loopSeconds%22%3A16%2C%22scale%22%3A0.7%2C%22seed%22%3A17%2C%22speed%22%3A0.71%2C%22warp%22%3A0.55%7D"></gradients-element>
+
 <style>
 #icfes-auth-gate{position:fixed;inset:0;z-index:2147483000;background:#0d1525;color:#f5f7fb;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,sans-serif}
 #icfes-auth-gate[hidden]{display:none!important}#icfes-auth-card{width:min(440px,100%);background:#172238;border:1px solid #34425c;border-radius:18px;padding:28px;box-shadow:0 20px 70px #0008}#icfes-auth-card h2{margin:0 0 8px;font-size:24px}#icfes-auth-card p{color:#c1ccdc;line-height:1.5}#icfes-auth-card label{display:block;margin:14px 0 6px}#icfes-auth-card input{box-sizing:border-box;width:100%;padding:12px;border-radius:8px;border:1px solid #50617c;background:#0d1525;color:#fff}#icfes-auth-card button{margin-top:16px;width:100%;padding:12px;border:0;border-radius:8px;background:#6ba8ff;color:#07152b;font-weight:700;cursor:pointer}#icfes-auth-message{min-height:1.5em;font-size:14px}
