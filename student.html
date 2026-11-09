@@ -52,6 +52,14 @@ table th{color:#c8c8ce;font-size:12px}table td{color:#e5e5e8}
 @media(max-width:720px){body{background-attachment:scroll}.side{background:rgba(12,13,17,.94);backdrop-filter:blur(28px)}.main{padding:14px 13px 42px}.top{gap:8px;flex-wrap:wrap}.topright{flex-wrap:wrap;justify-content:flex-end}.hero{min-height:0;padding:25px 21px;border-radius:23px;background-position:58% center}.hero-art{font-size:49px;padding:0}.hero p{font-size:13px}.stats{gap:9px;margin:14px 0 26px}.stat{padding:15px}.stat strong{font-size:25px}.stat span{font-size:10px}.sectionhead{align-items:flex-start;flex-direction:column}.exam{min-height:190px}.game{gap:11px}.gameside{order:-1}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 </style>
+/* Aurora real de la plataforma docente, aplicado también al espacio estudiantil */
+html{background:#040208!important}
+body{background:transparent!important;background-image:none!important;isolation:isolate}
+#icfes-aurora-background{position:fixed!important;inset:0!important;display:block!important;width:100vw!important;height:100vh!important;z-index:-2!important;pointer-events:none!important;overflow:hidden!important}
+#icfes-aurora-background canvas,#icfes-aurora-background>*{max-width:100%!important}
+@media(prefers-reduced-motion:reduce){#icfes-aurora-background{visibility:hidden}}
+
+<script type="module" src="https://gradients.sh/embed.js?v=35cce8510ba2"></script>
 </head>
 <body>
 <div class="shell">
@@ -100,4 +108,5 @@ async function submitAttempt(){if(!confirm('¿Deseas entregar la prueba? Despué
 async function init(){const res=await fetch('/api/public-config',{cache:'no-store'});if(!res.ok)throw new Error('No se pudo cargar la configuración de acceso.');const cfg=await res.json();state.client=window.supabase.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey);const {data,error}=await state.client.auth.getSession();if(error)throw error;state.user=data.session?.user;if(!state.user){location.href='index.html';return}await load()}
 document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>go(b.dataset.page));document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));$('menu').onclick=()=>$('side').classList.toggle('open');$('refresh').onclick=()=>load().then(()=>toast('Información actualizada.')).catch(e=>toast(e.message));$('logout').onclick=async()=>{await state.client?.auth.signOut();location.href='index.html'};$('examSearch').oninput=renderExams;$('examFilter').onchange=renderExams;$('today').textContent=new Date().toLocaleDateString('es-CO',{weekday:'short',day:'numeric',month:'short'});window.addEventListener('beforeunload',()=>{if(state.attempt)saveAttempt()});init().catch(e=>{console.error(e);document.querySelector('.main').innerHTML='<div class="empty"><h2>No se pudo cargar tu espacio</h2><p>'+esc(e.message||'Error de conexión')+'</p><button class="btn" onclick="location.reload()">Reintentar</button></div>'});
 })();
-</script></body></html>
+</script><gradients-element id="icfes-aurora-background" params="%7B%22background%22%3A%22%2308090c%22%2C%22blur%22%3A0.48%2C%22colors%22%3A%5B%22%23FF304F%22%2C%22%23C8102E%22%2C%22%237D1025%22%2C%22%23AEB2BB%22%2C%22%23171920%22%5D%2C%22dither%22%3A%7B%22cell%22%3A3%2C%22enabled%22%3Afalse%2C%22levels%22%3A8%7D%2C%22grain%22%3A0.12%2C%22interaction%22%3A%7B%22pointer%22%3A0.22%2C%22scroll%22%3A0.18%7D%2C%22kind%22%3A%22aurora%22%2C%22loopSeconds%22%3A18%2C%22scale%22%3A0.72%2C%22seed%22%3A17%2C%22speed%22%3A0.62%2C%22warp%22%3A0.5%7D"></gradients-element>
+</body></html>
