@@ -3,7 +3,7 @@ const USERNAME_RE=/^[a-zA-Z0-9._-]{3,32}$/;
 const EMAIL_DOMAIN='students.icfeslab.app';
 function reply(res,status,body){res.setHeader('Cache-Control','no-store');res.setHeader('Content-Type','application/json; charset=utf-8');return res.status(status).json(body);}
 async function sb(path,{key,token,method='GET',body}){
- const r=await fetch(process.env.SUPABASE_URL.replace(/\/$/, '')+path,{method,headers:{apikey:key,Authorization:'Bearer '+(token||key),'Content-Type':'application/json',Prefer:'return=representation'},...(body?{body:JSON.stringify(body)}:{})});
+ const r=await fetch((process.env.SUPABASE_URL||process.env.NEXT_PUBLIC_SUPABASE_URL).replace(/\/$/, '')+path,{method,headers:{apikey:key,Authorization:'Bearer '+(token||key),'Content-Type':'application/json',Prefer:'return=representation'},...(body?{body:JSON.stringify(body)}:{})});
  const data=await r.json().catch(()=>({}));
  if(!r.ok)throw new Error(data.msg||data.message||data.error_description||data.error||('Supabase '+r.status));
  return data;
@@ -35,7 +35,7 @@ export default async function handler(req,res){
     if(existing.length){results.push({row:i+1,username,ok:false,error:'Ese usuario ya existe.'});continue;}
     const created=await sb('/auth/v1/admin/users',{key:service,method:'POST',body:{email,password,email_confirm:true,user_metadata:{display_name:displayName,username,account_type:'student'}}});
     try{
-     await sb('/rest/v1/profiles',{key:service,method:'POST',body:{id:created.id,display_name:displayName,role:'student',username}});
+     await sb('/rest/v1/profiles',{key:service,method:'POST',body:{id:created.id,display_name:displayName,role:'student',username}});if(req.body?.school_id){await sb('/rest/v1/school_memberships',{key:service,method:'POST',body:{school_id:req.body.school_id,user_id:created.id,membership_role:'student'}})}
      results.push({row:i+1,username,display_name:displayName,ok:true});
     }catch(e){await sb('/auth/v1/admin/users/'+created.id,{key:service,method:'DELETE'}).catch(()=>{});throw e;}
    }catch(e){results.push({row:i+1,username,ok:false,error:e.message||'No se pudo crear la cuenta.'});}
