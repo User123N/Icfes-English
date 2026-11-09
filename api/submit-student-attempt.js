@@ -1,6 +1,6 @@
 // Secure scoring endpoint for completed student attempts on Vercel.
 function reply(res,status,body){res.setHeader('Cache-Control','no-store');return res.status(status).json(body);}
-async function request(path,key,method='GET',body){const r=await fetch(process.env.SUPABASE_URL.replace(/\/$/, '')+path,{method,headers:{apikey:key,Authorization:'Bearer '+key,'Content-Type':'application/json',Prefer:'return=representation'},...(body?{body:JSON.stringify(body)}:{})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.message||d.msg||d.error||'Error de Supabase '+r.status);return d;}
+async function request(path,key,method='GET',body){const r=await fetch((process.env.SUPABASE_URL||process.env.NEXT_PUBLIC_SUPABASE_URL).replace(/\/$/, '')+path,{method,headers:{apikey:key,Authorization:'Bearer '+key,'Content-Type':'application/json',Prefer:'return=representation'},...(body?{body:JSON.stringify(body)}:{})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.message||d.msg||d.error||'Error de Supabase '+r.status);return d;}
 export default async function handler(req,res){
  if(req.method!=='POST')return reply(res,405,{error:'Usa POST.'});
  const url=process.env.SUPABASE_URL||process.env.NEXT_PUBLIC_SUPABASE_URL,anon=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY||process.env.SUPABASE_ANON_KEY,service=process.env.SUPABASE_SERVICE_ROLE_KEY;
