@@ -13,7 +13,7 @@
 <style id="student-glass-red-redesign">
 :root{color-scheme:dark;--bg:#08090c;--panel:rgba(29,31,37,.43);--panel2:rgba(42,43,50,.52);--line:rgba(190,196,207,.22);--txt:#f7f7f8;--muted:#b8bac2;--cyan:#ff304f;--blue:#c8102e;--green:#8ce0bd;--red:#ff304f}
 html{scroll-behavior:smooth}
-body{background:#08090c;color:var(--txt);font-family:"DM Sans",sans-serif;background-image:linear-gradient(115deg,rgba(5,6,9,.96),rgba(10,10,14,.88)),url("https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=2200&q=85");background-size:cover;background-position:center;background-attachment:fixed}
+body{background:#08090c;color:var(--txt);font-family:"DM Sans",sans-serif;background-image:none;background-attachment:initial}
 body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(ellipse at 80% 5%,rgba(255,48,79,.19),transparent 38%),radial-gradient(ellipse at 8% 85%,rgba(125,16,37,.17),transparent 42%)}
 .shell{grid-template-columns:265px minmax(0,1fr)}
 .side{background:rgba(13,14,18,.58);border-right:1px solid rgba(190,196,207,.16);backdrop-filter:blur(34px) saturate(135%);-webkit-backdrop-filter:blur(34px) saturate(135%);padding:27px 17px}
@@ -28,7 +28,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
 .btn.primary{background:linear-gradient(115deg,#ff304f,#a90f2d);color:white;border:1px solid rgba(255,255,255,.18);box-shadow:0 9px 26px rgba(125,16,37,.28);font-weight:800}.btn.primary:hover{background:linear-gradient(115deg,#ff526a,#c8102e);box-shadow:0 12px 32px rgba(125,16,37,.38)}
 .eyebrow{color:#ff526a;letter-spacing:2.2px}
 h1{font-size:clamp(34px,4.4vw,54px);letter-spacing:-1.8px}h2{font-size:28px;letter-spacing:-1px}h3{letter-spacing:-.35px}
-.hero{position:relative;isolation:isolate;min-height:315px;padding:clamp(26px,4.5vw,52px);border-radius:30px;border:1px solid rgba(190,196,207,.24);background:linear-gradient(100deg,rgba(8,9,12,.91) 0%,rgba(57,13,25,.78) 54%,rgba(23,24,29,.52) 100%),url("https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1600&q=85") center/cover;box-shadow:0 25px 75px rgba(0,0,0,.32);overflow:hidden;backdrop-filter:blur(18px)}
+.hero{position:relative;isolation:isolate;min-height:315px;padding:clamp(26px,4.5vw,52px);border-radius:30px;border:1px solid rgba(190,196,207,.24);background:linear-gradient(100deg,rgba(8,9,12,.91) 0%,rgba(57,13,25,.78) 54%,rgba(23,24,29,.52) 100%);box-shadow:0 25px 75px rgba(0,0,0,.32);overflow:hidden;backdrop-filter:blur(18px)}
 .hero:after{content:"";position:absolute;z-index:-1;width:360px;height:360px;right:5%;top:-45%;border-radius:50%;background:radial-gradient(circle,rgba(255,48,79,.24),transparent 68%);filter:blur(14px)}
 .hero p{color:#dedee2;max-width:610px}.hero-art{font-size:clamp(60px,8vw,100px);filter:drop-shadow(0 15px 25px #0009);padding:20px}
 .stats{gap:14px;margin:20px 0 34px}.stat,.card,.exam,.gamebox,.gameside{background:linear-gradient(145deg,rgba(53,55,63,.48),rgba(22,23,28,.46));border:1px solid rgba(190,196,207,.19);border-radius:22px;backdrop-filter:blur(30px) saturate(140%);-webkit-backdrop-filter:blur(30px) saturate(140%);box-shadow:0 12px 36px rgba(0,0,0,.18)}
