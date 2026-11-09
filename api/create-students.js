@@ -24,7 +24,7 @@ export default async function handler(req,res){
   if(!profiles[0]||!['teacher','teacher_admin'].includes(profiles[0].role))return reply(res,403,{error:'Solo un docente autorizado puede crear estudiantes.'});
   const rows=Array.isArray(req.body?.students)?req.body.students:[req.body];
   if(!rows.length||rows.length>100)return reply(res,400,{error:'Registra entre 1 y 100 estudiantes por lote.'});
-  const results=[];
+  if(req.body?.school_id){const schools=await sb('/rest/v1/schools?id=eq.'+encodeURIComponent(req.body.school_id)+'&created_by=eq.'+encodeURIComponent(actor.id)+'&select=id',{key:service});if(!schools.length)return reply(res,403,{error:'El colegio seleccionado no pertenece a tu cuenta docente.'});}\n  const results=[];
   for(let i=0;i<rows.length;i++){
    const x=rows[i]||{},username=String(x.username||'').trim().toLowerCase(),password=String(x.password||''),displayName=String(x.display_name||username).trim().slice(0,120);
    if(!USERNAME_RE.test(username)){results.push({row:i+1,username,ok:false,error:'Usuario inválido: usa 3–32 letras, números, punto, guion o guion bajo.'});continue;}
