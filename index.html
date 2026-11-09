@@ -1461,6 +1461,109 @@ a{color:#ff536b!important}a:hover{color:#ff9aa8!important}
 }
 button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{
  outline:2px solid #ff405b!important;outline-offset:3px;
-}</style>
+}
+/* REDISEÑO ESTUDIANTIL + GLASS MÁS TRANSPARENTE EN TODA LA EXPERIENCIA */
+:root{
+ --panel:rgba(31,33,39,.42)!important;
+ --panel2:rgba(45,47,54,.34)!important;
+ --line:rgba(218,222,230,.22)!important;
+}
+.main .page:not(#page-admin){
+ isolation:isolate;
+}
+.main .page:not(#page-admin) .hero,
+.main .page:not(#page-admin) .stat,
+.main .page:not(#page-admin) .feature-card,
+.main .page:not(#page-admin) .part-card,
+.main .page:not(#page-admin) .game-main,
+.main .page:not(#page-admin) .game-aside,
+.main .page:not(#page-admin) .result-screen,
+.main .page:not(#page-admin) .progress-card,
+.main .page:not(#page-admin) .empty-state,
+.main .page:not(#page-admin) .question-card,
+.main .page:not(#page-admin) .practice-card,
+.main .page:not(#page-admin) .summary-card{
+ background:linear-gradient(135deg,rgba(224,227,234,.13),rgba(112,115,124,.075) 48%,rgba(22,23,28,.30))!important;
+ border:1px solid rgba(220,224,232,.23)!important;
+ box-shadow:0 18px 55px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.17)!important;
+ backdrop-filter:blur(30px) saturate(145%)!important;
+ -webkit-backdrop-filter:blur(30px) saturate(145%)!important;
+}
+.main .page:not(#page-admin) .hero{
+ background:linear-gradient(115deg,rgba(125,16,37,.26),rgba(108,111,120,.10) 54%,rgba(18,19,24,.28))!important;
+}
+.main .page:not(#page-admin) .hero-art,
+.main .page:not(#page-admin) .hero-image-wrap{
+ border-color:rgba(220,224,232,.24)!important;
+}
+.main .page:not(#page-admin) .part-card{
+ overflow:hidden;
+}
+.main .page:not(#page-admin) .part-image{
+ background:linear-gradient(135deg,rgba(200,16,46,.20),rgba(185,189,198,.10),rgba(15,16,20,.28))!important;
+}
+.main .page:not(#page-admin) .part-body{
+ background:rgba(210,213,220,.035)!important;
+}
+.main .page:not(#page-admin) .pill,
+.main .page:not(#page-admin) .daily-item,
+.main .page:not(#page-admin) .option,
+.main .page:not(#page-admin) .question-option,
+.main .page:not(#page-admin) .answer-option{
+ background:rgba(220,224,232,.075)!important;
+ border-color:rgba(220,224,232,.21)!important;
+ backdrop-filter:blur(18px)!important;
+ -webkit-backdrop-filter:blur(18px)!important;
+}
+.main .page:not(#page-admin) .option:hover,
+.main .page:not(#page-admin) .option.selected,
+.main .page:not(#page-admin) .question-option.selected,
+.main .page:not(#page-admin) .answer-option.selected{
+ background:rgba(200,16,46,.22)!important;
+ border-color:rgba(255,48,79,.72)!important;
+ box-shadow:0 0 24px rgba(200,16,46,.14),inset 0 1px 0 rgba(255,255,255,.12)!important;
+}
+.main .page:not(#page-admin) .section-head{
+ border-color:rgba(220,224,232,.12)!important;
+}
+.main .page:not(#page-admin) .muted,
+.main .page:not(#page-admin) .hero-copy p,
+.main .page:not(#page-admin) .feature-card p{
+ color:rgba(232,234,239,.76)!important;
+}
+.main .page:not(#page-admin) input,
+.main .page:not(#page-admin) textarea,
+.main .page:not(#page-admin) select{
+ background:rgba(13,14,18,.48)!important;
+ border-color:rgba(220,224,232,.22)!important;
+ backdrop-filter:blur(18px)!important;
+ -webkit-backdrop-filter:blur(18px)!important;
+}
+.main .page:not(#page-admin) .primary{
+ box-shadow:0 9px 28px rgba(200,16,46,.24),inset 0 1px 0 rgba(255,255,255,.24)!important;
+}
+.main .page:not(#page-admin) .stat:hover,
+.main .page:not(#page-admin) .feature-card:hover,
+.main .page:not(#page-admin) .part-card:hover{
+ transform:translateY(-3px);
+ border-color:rgba(255,48,79,.42)!important;
+}
+@media(prefers-reduced-motion:no-preference){
+ .main .page:not(#page-admin) .stat,
+ .main .page:not(#page-admin) .feature-card,
+ .main .page:not(#page-admin) .part-card{
+  transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease,background .25s ease;
+ }
+}
+@media(max-width:760px){
+ .main .page:not(#page-admin) .hero,
+ .main .page:not(#page-admin) .feature-card,
+ .main .page:not(#page-admin) .stat,
+ .main .page:not(#page-admin) .part-card{
+  backdrop-filter:blur(22px) saturate(135%)!important;
+  -webkit-backdrop-filter:blur(22px) saturate(135%)!important;
+ }
+}
+</style>
 
 </body></html>
