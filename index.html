@@ -401,10 +401,32 @@ body {
   #icfes-aurora-background { visibility: hidden; }
 }
 </style>
-<script type="module" src="https://gradients.sh/embed.js?v=35cce8510ba2"></script>
+
+<style id="performance-pass">
+/* Mantener identidad visual con efectos más baratos para GPU y móvil. */
+html{scroll-behavior:auto}
+body{background-color:#08090c!important;background-image:radial-gradient(ellipse at 78% 0%,rgba(105,27,45,.28),transparent 42%),radial-gradient(ellipse at 4% 75%,rgba(47,20,30,.22),transparent 38%)!important;background-attachment:scroll!important}
+body:after{display:none!important;animation:none!important;filter:none!important}
+body:before{opacity:.08!important;background-size:52px 52px!important}
+.sidebar,.stat,.part-card,.feature-card,.game-main,.game-aside,.admin-panel,.ghost-btn,.icon-btn,.option,.part-number{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.sidebar{background:linear-gradient(180deg,rgba(7,9,17,.98),rgba(12,13,19,.94))!important}
+.stat,.part-card,.feature-card,.game-main,.game-aside,.admin-panel{box-shadow:0 12px 32px rgba(0,0,0,.22)!important}
+.stat:after,.feature-card:before,.hero:before{filter:none!important}
+.stat:after{opacity:.08!important}
+.hero{background-image:linear-gradient(110deg,rgba(8,9,12,.96),rgba(55,15,27,.87) 55%,rgba(18,19,24,.9))!important;box-shadow:0 18px 48px #0008!important}
+.hero-image-wrap:before{animation:none!important}
+.brandmark:after{animation:none!important}
+.part-card:hover .part-image img{filter:none!important}
+.part-card:hover,.edit-question:hover{transform:none!important}
+.bgfx,.pgbg,.banner,.mq{display:none!important}
+#page-parts,#page-progress,#page-admin,.game-main:before{background-image:none!important}
+.primary:after{display:none!important}
+@media(max-width:760px){.hero{background-image:linear-gradient(110deg,rgba(8,9,12,.94),rgba(55,15,27,.86))!important}.main{contain:layout style}.sidebar{backdrop-filter:none!important}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
 </head>
 <body>
-<gradients-element id="icfes-aurora-background" params="%7B%22background%22%3A%22%2308090c%22%2C%22blur%22%3A0.48%2C%22colors%22%3A%5B%22%23FF304F%22%2C%22%23C8102E%22%2C%22%237D1025%22%2C%22%23AEB2BB%22%2C%22%23171920%22%5D%2C%22dither%22%3A%7B%22cell%22%3A3%2C%22enabled%22%3Afalse%2C%22levels%22%3A8%7D%2C%22grain%22%3A0.12%2C%22interaction%22%3A%7B%22pointer%22%3A0.22%2C%22scroll%22%3A0.18%7D%2C%22kind%22%3A%22aurora%22%2C%22loopSeconds%22%3A18%2C%22scale%22%3A0.72%2C%22seed%22%3A17%2C%22speed%22%3A0.62%2C%22warp%22%3A0.5%7D"></gradients-element>
+
 
 <style>
 #icfes-auth-gate{position:fixed;inset:0;z-index:2147483000;background:#0d1525;color:#f5f7fb;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,sans-serif}
