@@ -428,7 +428,7 @@ body:before{opacity:.08!important;background-size:52px 52px!important}
 
 <style id="global-interaction-fix">
 /* Las capas decorativas nunca deben bloquear clics, teclado ni desplazamiento. */
-body:before,body:after,.bgfx,.pgbg,#icfes-aurora-background,#icfes-aurora-background *{pointer-events:none!important}
+body:before,body:after,.bgfx,.pgbg,#icfes-aurora-background{pointer-events:none!important}
 #icfes-aurora-background{z-index:0!important}
 .app{position:relative!important;z-index:2!important;min-height:100vh}
 #icfes-auth-gate[hidden]{display:none!important;pointer-events:none!important}
@@ -436,6 +436,7 @@ body:before,body:after,.bgfx,.pgbg,#icfes-aurora-background,#icfes-aurora-backgr
 </head>
 <body>
 <gradients-element id="icfes-aurora-background" params="%7B%22background%22%3A%22%2308090c%22%2C%22blur%22%3A0.48%2C%22colors%22%3A%5B%22%23FF304F%22%2C%22%23C8102E%22%2C%22%237D1025%22%2C%22%23AEB2BB%22%2C%22%23171920%22%5D%2C%22dither%22%3A%7B%22cell%22%3A3%2C%22enabled%22%3Afalse%2C%22levels%22%3A8%7D%2C%22grain%22%3A0.12%2C%22interaction%22%3A%7B%22pointer%22%3A0.22%2C%22scroll%22%3A0.18%7D%2C%22kind%22%3A%22aurora%22%2C%22loopSeconds%22%3A18%2C%22scale%22%3A0.72%2C%22seed%22%3A17%2C%22speed%22%3A0.62%2C%22warp%22%3A0.5%7D">
+</gradients-element>
 
 
 <style>
