@@ -125,9 +125,18 @@ body:before,body:after,#icfes-aurora-background{pointer-events:none!important}
 .shell{position:relative!important;z-index:2!important;min-height:100vh}
 .side,.main{position:relative;z-index:3}
 </style>
+
+<style id="smooth-performance-pass">
+/* Aurora sigue animada; se aligera el renderizado de paneles y tarjetas. */
+.shell,.shell *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.card,.exam,.stat,.grid>*{contain:layout paint;content-visibility:auto;contain-intrinsic-size:auto 210px}
+.page.active{contain:layout style}
+#icfes-aurora-background{transform:translateZ(0);will-change:transform}
+@media(max-width:760px){.card,.exam,.stat,.grid>*{contain-intrinsic-size:auto 170px}}
+</style>
 </head>
 <body>
-<gradients-element id="icfes-aurora-background" params="%7B%22background%22%3A%22%2308090c%22%2C%22blur%22%3A0.48%2C%22colors%22%3A%5B%22%23FF304F%22%2C%22%23C8102E%22%2C%22%237D1025%22%2C%22%23AEB2BB%22%2C%22%23171920%22%5D%2C%22dither%22%3A%7B%22cell%22%3A3%2C%22enabled%22%3Afalse%2C%22levels%22%3A8%7D%2C%22grain%22%3A0.12%2C%22interaction%22%3A%7B%22pointer%22%3A0.22%2C%22scroll%22%3A0.18%7D%2C%22kind%22%3A%22aurora%22%2C%22loopSeconds%22%3A18%2C%22scale%22%3A0.72%2C%22seed%22%3A17%2C%22speed%22%3A0.62%2C%22warp%22%3A0.5%7D">
+<gradients-element id="icfes-aurora-background" params="%7B%22background%22%3A%22%2308090c%22%2C%22blur%22%3A0.26%2C%22colors%22%3A%5B%22%23FF304F%22%2C%22%23C8102E%22%2C%22%237D1025%22%2C%22%23AEB2BB%22%2C%22%23171920%22%5D%2C%22dither%22%3A%7B%22cell%22%3A3%2C%22enabled%22%3Afalse%2C%22levels%22%3A8%7D%2C%22grain%22%3A0.035%2C%22interaction%22%3A%7B%22pointer%22%3A0.1%2C%22scroll%22%3A0.08%7D%2C%22kind%22%3A%22aurora%22%2C%22loopSeconds%22%3A22%2C%22scale%22%3A0.66%2C%22seed%22%3A17%2C%22speed%22%3A0.44%2C%22warp%22%3A0.34%7D">
 </gradients-element>
 
 
