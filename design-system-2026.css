@@ -352,3 +352,395 @@ tr:hover td{background:rgba(255,255,255,.025)}
 @media(prefers-reduced-motion:reduce){
   *,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
 }
+
+
+/* ==========================================================
+   VISUAL REWORK V2 — editorial / constellation / command UI
+   Intent: a visible layout transformation, not a palette-only
+   override. Inspired by Dala's open canvas, shadcn primitives
+   and Linear's information architecture.
+   ========================================================== */
+
+:root{
+  --bg:#050506;
+  --panel:#101014;
+  --panel2:#17171c;
+  --surface:#0b0b0e;
+  --surface-raised:#141418;
+  --line:rgba(255,255,255,.09);
+  --line-strong:rgba(255,255,255,.16);
+  --red:#ff304f;
+  --red-strong:#c8102e;
+  --red-soft:rgba(255,48,79,.10);
+  --radius:14px;
+  --shadow:0 24px 70px rgba(0,0,0,.38);
+}
+html,body{background:#050506!important}
+body{
+  background-image:
+    radial-gradient(ellipse at 74% 2%,rgba(255,48,79,.075),transparent 28%),
+    radial-gradient(ellipse at 8% 48%,rgba(255,48,79,.025),transparent 36%)!important;
+}
+body:before{display:none!important}
+
+/* A cleaner command-center shell */
+.app,.shell{
+  grid-template-columns:224px minmax(0,1fr)!important;
+  min-height:100vh;
+  background:transparent!important;
+}
+.sidebar,.side{
+  width:224px;
+  padding:28px 13px 20px!important;
+  background:#08080a!important;
+  border-right:1px solid rgba(255,255,255,.075)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+.brand{padding:0 11px 38px!important;gap:11px!important}
+.brandmark,.mark{
+  width:37px!important;height:37px!important;
+  border-radius:11px!important;
+  font-size:17px!important;
+  background:var(--red)!important;
+  box-shadow:0 0 0 5px rgba(255,48,79,.08)!important;
+}
+.brand-name,.brand b{font-size:14px!important;font-weight:650!important}
+.brand-sub,.brand small{font-size:9px!important;letter-spacing:.14em!important;color:#73737d!important}
+.nav-label,.navlabel{
+  padding:13px 12px 8px!important;
+  color:#60606a!important;
+  font-size:9px!important;
+  letter-spacing:.17em!important;
+}
+.nav{gap:3px!important}
+.nav button{
+  min-height:38px!important;
+  padding:9px 11px!important;
+  border-radius:8px!important;
+  font-size:12px!important;
+  color:#96969f!important;
+}
+.nav button:hover,.nav button.active{
+  color:#fff!important;
+  background:rgba(255,255,255,.055)!important;
+  border-color:transparent!important;
+  box-shadow:inset 2px 0 var(--red)!important;
+}
+.nav button.active .ico,.nav button.active .ic{color:var(--red)!important}
+.streak,.tip{
+  background:transparent!important;
+  border:1px solid rgba(255,255,255,.09)!important;
+  border-radius:12px!important;
+  padding:14px!important;
+}
+.streak:after{font-size:42px!important;right:8px!important;color:rgba(255,48,79,.12)!important}
+.side-profile,.user{margin-left:6px!important;margin-right:6px!important}
+.main{
+  max-width:1740px!important;
+  padding:25px clamp(24px,4.2vw,68px) 90px!important;
+}
+.topbar,.top{
+  min-height:40px!important;
+  padding:0 0 16px!important;
+  border-bottom:1px solid rgba(255,255,255,.075)!important;
+  margin-bottom:40px!important;
+}
+.crumb{font-size:11px!important;letter-spacing:.01em}
+.top-actions,.topright{gap:7px!important}
+.ghost-btn,.icon-btn,.btn:not(.primary){
+  background:transparent!important;
+  border:1px solid rgba(255,255,255,.12)!important;
+  border-radius:8px!important;
+  padding:9px 12px!important;
+  font-size:12px!important;
+}
+.primary,.btn.primary{
+  background:var(--red)!important;
+  border:1px solid var(--red)!important;
+  border-radius:8px!important;
+  padding:10px 15px!important;
+  color:#fff!important;
+  font-size:12px!important;
+  box-shadow:none!important;
+}
+.primary:hover,.btn.primary:hover{background:#e52543!important;transform:translateY(-1px)!important}
+
+/* Dala's open editorial canvas — remove the boxed SaaS hero */
+.page.active{animation:editorialEnter .38s ease both!important}
+@keyframes editorialEnter{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+.hero{
+  position:relative!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1.1fr) minmax(260px,.9fr)!important;
+  align-items:center!important;
+  min-height:440px!important;
+  padding:52px 0 54px!important;
+  gap:30px!important;
+  overflow:hidden!important;
+  border:0!important;
+  border-bottom:1px solid rgba(255,255,255,.11)!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+}
+.hero:before{
+  content:""!important;
+  position:absolute!important;
+  width:560px!important;height:400px!important;
+  right:-110px!important;top:0!important;
+  border-radius:50%!important;
+  background:radial-gradient(ellipse,rgba(255,48,79,.10),transparent 68%)!important;
+  filter:blur(22px)!important;
+  opacity:1!important;
+  pointer-events:none!important;
+}
+.hero:after{
+  content:""!important;
+  position:absolute!important;
+  inset:auto 0 0!important;
+  height:1px!important;
+  background:linear-gradient(90deg,transparent,rgba(255,48,79,.5),transparent)!important;
+  opacity:.45!important;
+  transform:none!important;
+  animation:none!important;
+}
+.hero-copy,.hero>div:first-child{position:relative!important;z-index:2!important}
+.eyebrow{
+  color:#ff7186!important;
+  letter-spacing:.19em!important;
+  font-size:9px!important;
+  font-weight:700!important;
+}
+.eyebrow:before{width:25px!important;background:var(--red)!important}
+.page h1,.hero h1{
+  max-width:790px!important;
+  margin:20px 0 20px!important;
+  font-size:clamp(54px,6.2vw,91px)!important;
+  font-weight:400!important;
+  line-height:.98!important;
+  letter-spacing:-.075em!important;
+}
+.hero p,.hero-copy p{
+  max-width:490px!important;
+  color:#aaaab2!important;
+  font-size:15px!important;
+  line-height:1.8!important;
+}
+.gradient-text{
+  color:#ff526b!important;
+  background:none!important;
+  -webkit-text-fill-color:#ff526b!important;
+  font-weight:400!important;
+}
+.hero-buttons{gap:12px!important;margin-top:28px!important}
+.hero-buttons .primary{border-radius:999px!important;padding:13px 20px!important}
+.hero-buttons .ghost-btn{border:0!important;border-bottom:1px solid rgba(255,255,255,.24)!important;border-radius:0!important;padding:10px 2px!important}
+.hero .pill{font-size:9px!important;letter-spacing:.09em!important;padding:7px 10px!important}
+.hero-art{
+  position:relative!important;
+  display:block!important;
+  width:100%!important;
+  min-height:335px!important;
+  height:100%!important;
+  overflow:visible!important;
+  perspective:900px!important;
+  background:
+    radial-gradient(circle,rgba(255,91,112,.95) 1px,transparent 1.7px) 50% 50%/18px 18px,
+    radial-gradient(circle,rgba(255,255,255,.40) .8px,transparent 1.5px) 6px 9px/29px 29px,
+    radial-gradient(ellipse at 50% 48%,rgba(255,48,79,.10),transparent 60%)!important;
+  -webkit-mask-image:radial-gradient(ellipse at center,#000 18%,rgba(0,0,0,.9) 48%,transparent 76%)!important;
+  mask-image:radial-gradient(ellipse at center,#000 18%,rgba(0,0,0,.9) 48%,transparent 76%)!important;
+  transform:rotate(-7deg) scale(1.02)!important;
+  animation:constellationDrift 16s ease-in-out infinite alternate!important;
+}
+@keyframes constellationDrift{from{transform:rotate(-7deg) translateY(0) scale(1.02)}to{transform:rotate(-3deg) translateY(-9px) scale(1.06)}}
+.hero-art>*{display:none!important}
+.hero-art:before{
+  content:""!important;
+  display:block!important;
+  position:absolute!important;
+  inset:8% 9%!important;
+  border:1px solid rgba(255,48,79,.45)!important;
+  border-radius:48% 52% 61% 39% / 43% 38% 62% 57%!important;
+  transform:rotate(22deg)!important;
+  box-shadow:0 0 50px rgba(255,48,79,.07),inset 0 0 50px rgba(255,48,79,.05)!important;
+}
+.hero-art:after{
+  content:"ICFES / ENGLISH / SABER 11"!important;
+  position:absolute!important;
+  display:grid!important;
+  place-items:center!important;
+  inset:38% 14%!important;
+  color:rgba(255,255,255,.65)!important;
+  font:600 9px var(--font-ui)!important;
+  letter-spacing:.29em!important;
+  text-align:center!important;
+  text-shadow:0 0 24px rgba(255,48,79,.7)!important;
+  transform:rotate(7deg)!important;
+}
+
+/* Numbers become an editorial data strip instead of four boxed widgets */
+.stats{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:0!important;
+  margin:27px 0 54px!important;
+  padding:0!important;
+  border-top:1px solid rgba(255,255,255,.10)!important;
+  border-bottom:1px solid rgba(255,255,255,.10)!important;
+}
+.stat{
+  min-height:130px!important;
+  padding:22px 24px 20px 0!important;
+  margin:0!important;
+  border:0!important;
+  border-right:1px solid rgba(255,255,255,.10)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+}
+.stat:not(:first-child){padding-left:24px!important}
+.stat:last-child{border-right:0!important}
+.stat strong{
+  order:1!important;
+  margin:7px 0 4px!important;
+  font-size:clamp(34px,4vw,48px)!important;
+  font-weight:400!important;
+  line-height:1!important;
+  letter-spacing:-.075em!important;
+  color:#fff!important;
+}
+.stat-top{order:2!important}
+.stat-top,.stat span{font-size:10px!important;color:#898992!important;letter-spacing:.07em!important;text-transform:uppercase!important}
+.stat-icon{display:none!important}
+
+/* Section headings and content rhythm */
+.section-head,.sectionhead{
+  margin:52px 0 20px!important;
+  padding:0!important;
+  display:flex!important;
+  align-items:flex-end!important;
+  justify-content:space-between!important;
+  border:0!important;
+}
+.section-head h2,.sectionhead h2{
+  font-size:clamp(27px,3vw,39px)!important;
+  font-weight:450!important;
+  letter-spacing:-.06em!important;
+  margin:0 0 5px!important;
+}
+.section-head p,.sectionhead p{color:#898992!important;font-size:12px!important;margin:0!important}
+.parts-grid,.feature-row,.grid{gap:12px!important}
+.part-card,.feature-card,.card,.exam,.admin-panel,.game-main,.game-aside,.gamebox,.gameside{
+  background:rgba(17,17,21,.72)!important;
+  border:1px solid rgba(255,255,255,.09)!important;
+  border-radius:13px!important;
+  box-shadow:none!important;
+  transform:none!important;
+}
+.part-card:hover,.feature-card:hover,.card:hover,.exam:hover{
+  border-color:rgba(255,48,79,.40)!important;
+  background:rgba(22,18,21,.96)!important;
+}
+.part-card h3,.feature-card h3,.card h3,.exam h3{font-size:16px!important}
+.part-image{border-radius:9px!important;overflow:hidden!important}
+.part-image:after{background:linear-gradient(0deg,rgba(5,5,6,.7),transparent)!important}
+.part-number{background:var(--red)!important;border-radius:7px!important}
+.part-body{padding:17px!important}
+.part-body p,.feature-card p,.card p,.exam p{color:#9999a2!important;font-size:12px!important;line-height:1.7!important}
+.mini-progress{height:3px!important;border-radius:99px!important}
+.mini-progress span{background:var(--red)!important}
+
+/* Learning / admin workspace keeps useful density but gains deliberate grouping */
+.admin-tabs{display:flex!important;gap:5px!important;border-bottom:1px solid var(--line)!important;padding-bottom:8px!important}
+.admin-tab{
+  border-radius:8px!important;
+  background:transparent!important;
+  border:1px solid transparent!important;
+  color:#a1a1aa!important;
+  padding:9px 12px!important;
+}
+.admin-tab.active{background:rgba(255,48,79,.10)!important;color:#fff!important;border-color:rgba(255,48,79,.22)!important}
+.admin-content{background:transparent!important;border:0!important;padding:22px 0!important}
+.admin-panel{padding:22px!important}
+.form-grid{background:transparent!important;border:0!important}
+.question-editor-list,.edit-question{background:#101014!important;border:1px solid var(--line)!important;border-radius:10px!important}
+.tiny-btn{border-radius:7px!important;background:#1a1a20!important;border:1px solid var(--line)!important}
+table{background:transparent!important}
+th{background:#111115!important}
+td,th{padding:13px 14px!important}
+tbody tr:hover td{background:rgba(255,255,255,.025)!important}
+
+/* Student learning landing page receives the same open hero */
+#page-home .hero{min-height:390px!important}
+#page-home .hero>div:first-child{max-width:740px!important}
+#page-home .hero h1{max-width:720px!important}
+#page-home .hero-art{min-height:300px!important}
+#page-home .stats{margin-top:24px!important}
+#page-home .sectionhead{margin-top:48px!important}
+.exam .tag{border-radius:999px!important}
+
+/* Quiz itself must remain focused and legible */
+.game-top,.gamehead{border-bottom:1px solid var(--line)!important;padding-bottom:14px!important}
+.question-title,.qtitle{font-size:clamp(22px,3vw,33px)!important;line-height:1.25!important;font-weight:550!important}
+.option,.opt{padding:15px 16px!important;border-radius:10px!important}
+.option.selected,.opt.selected{box-shadow:inset 3px 0 var(--red)!important}
+.feedback{border-radius:10px!important}
+.question-map,.qmap{background:#101014!important;border:1px solid var(--line)!important;border-radius:12px!important;padding:13px!important}
+
+/* Authentication becomes a strong branded landing surface */
+#icfes-auth-card{
+  width:min(470px,100%)!important;
+  border-radius:17px!important;
+  padding:38px!important;
+  background:
+    radial-gradient(ellipse at 100% 0%,rgba(255,48,79,.13),transparent 42%),
+    #101014!important;
+}
+#icfes-auth-card h2{font-size:29px!important;line-height:1.05!important}
+#icfes-auth-card button{border-radius:999px!important;padding:13px 18px!important}
+
+/* Responsive layout */
+@media(max-width:1100px){
+  .app,.shell{grid-template-columns:205px minmax(0,1fr)!important}
+  .sidebar,.side{width:205px!important}
+  .hero{min-height:370px!important;grid-template-columns:1.1fr .9fr!important}
+  .page h1,.hero h1{font-size:clamp(48px,6vw,70px)!important}
+}
+@media(max-width:760px){
+  .app,.shell{grid-template-columns:minmax(0,1fr)!important}
+  .sidebar,.side{width:250px!important}
+  .main{padding:16px 16px 54px!important}
+  .topbar,.top{margin-bottom:22px!important}
+  .hero{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    min-height:0!important;
+    padding:30px 0 26px!important;
+    gap:8px!important;
+  }
+  .page h1,.hero h1{font-size:clamp(43px,12vw,62px)!important}
+  .hero-art{min-height:190px!important;max-height:210px!important;margin:0 auto!important;width:100%!important}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;margin:18px 0 36px!important}
+  .stat{min-height:105px!important;padding:15px 12px 15px 0!important;border-bottom:1px solid var(--line)!important}
+  .stat:not(:first-child){padding-left:12px!important}
+  .stat:nth-child(2){border-right:0!important}
+  .stat strong{font-size:35px!important}
+  .section-head,.sectionhead{margin:36px 0 16px!important}
+  .parts-grid,.feature-row,.grid{grid-template-columns:1fr!important}
+}
+@media(max-width:420px){
+  .main{padding-left:13px!important;padding-right:13px!important}
+  .hero{padding-top:22px!important}
+  .page h1,.hero h1{font-size:43px!important}
+  .stat{min-height:94px!important}
+  .stat strong{font-size:31px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .hero-art{animation:none!important}
+}
