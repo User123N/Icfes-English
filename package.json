@@ -8,6 +8,8 @@
   },
   "scripts": {
     "test": "node --test",
-    "check": "node tests/syntax-check.mjs"
+    "check": "node tests/syntax-check.mjs",
+    "check:release": "node tests/release-readiness.mjs",
+    "verify": "npm test && npm run check && npm run check:release"
   }
 }
