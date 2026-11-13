@@ -13,7 +13,7 @@ export default async function handler(req,res){
  if(req.method!=='POST')return reply(res,405,{error:'Usa POST.'});
  const url=String(process.env.SUPABASE_URL||process.env.NEXT_PUBLIC_SUPABASE_URL||'').trim().replace(/\/+$/, '');
  const anon=String(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY||process.env.SUPABASE_PUBLISHABLE_KEY||process.env.SUPABASE_ANON_KEY||'').trim();
- const service=String(process.env.SUPABASE_SERVICE_ROLE_KEY||'').trim();
+ const service=String(process.env.SUPABASE_SERVICE_ROLE_KEY||process.env.SUPABASE_SECRET_KEY||'').trim();
  if(!url||!anon||!service)return reply(res,503,{error:'Configura SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY y la clave pública en Vercel.'});
  const bearer=(req.headers.authorization||'').replace(/^Bearer\s+/i,'');
  if(!bearer)return reply(res,401,{error:'Debes iniciar sesión como docente.'});
