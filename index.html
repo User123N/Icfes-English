@@ -314,6 +314,27 @@ body.presentation-mode .game-controls button{font-size:18px;padding:16px 24px}
 body.presentation-mode .game-top{font-size:16px}
 @media(max-width:700px){.top-actions{gap:6px}.top-actions button{padding:10px 12px;font-size:12px}.hero{padding:24px!important}}
 
+
+/* Lightweight aurora background: compositor-friendly transform animation only. */
+body{isolation:isolate}
+body::after{
+ content:"";position:fixed;inset:-24%;z-index:-1;pointer-events:none;
+ background:
+  radial-gradient(ellipse 38% 24% at 18% 32%,rgba(255,48,79,.17),transparent 72%),
+  radial-gradient(ellipse 34% 28% at 52% 18%,rgba(80,205,190,.13),transparent 72%),
+  radial-gradient(ellipse 42% 24% at 82% 38%,rgba(118,80,190,.16),transparent 72%),
+  linear-gradient(112deg,transparent 24%,rgba(60,190,170,.055) 42%,rgba(255,48,79,.07) 52%,transparent 72%);
+ filter:blur(34px);opacity:.82;transform:translate3d(-2%,0,0) scale(1.04);
+ animation:icfesAuroraDrift 32s ease-in-out infinite alternate;
+}
+@keyframes icfesAuroraDrift{
+ from{transform:translate3d(-2%,0,0) scale(1.04)}
+ to{transform:translate3d(2%,1.5%,0) scale(1.08)}
+}
+@media(prefers-reduced-motion:reduce){
+ body::after{animation:none;transform:none}
+}
+
 </style>
 
 <style id="Paulo-results-size-fix">
