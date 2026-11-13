@@ -8,7 +8,6 @@
   --login-red-dark:#c8102e;
   --login-border:rgba(255,255,255,.11);
 }
-html,body{min-height:100%;background:#08080a}
 html body #icfes-auth-gate:not([hidden]){
   position:fixed!important;inset:0!important;
   z-index:2147483000!important;
@@ -220,7 +219,7 @@ html body #icfes-auth-gate:not([hidden]){
   box-shadow:0 11px 30px rgba(200,16,46,.25)!important;
 }
 #icfes-auth-gate #icfes-auth-submit:disabled{opacity:.65;cursor:wait;transform:none}
-.login-submit-arrow{font-size:17px;line-height:1}
+#icfes-auth-gate #icfes-auth-submit:after{content:"→";font-size:17px;line-height:1}
 #icfes-auth-gate #icfes-auth-message{
   min-height:28px!important;margin:12px 0 0!important;
   color:#ff98a6!important;font-size:11px!important;line-height:1.55!important;
