@@ -1,4 +1,4 @@
-import { authenticateTeacher, dbRequest, jsonReply, uuid, verifyOwnedExam, writeAudit } from './_lib/supabase-server.js';
+import { authenticateTeacher, dbRequest, jsonReply, uuid, newId, verifyOwnedExam, writeAudit } from './_lib/supabase-server.js';
 
 function bodyOf(req) {
   if (req.body && typeof req.body === 'object' && !Buffer.isBuffer(req.body)) return req.body;
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
       if (source.length > 90000) return jsonReply(res, 413, { error: 'El material fuente supera el límite permitido.' });
       const valid = body.questions.map(validateDraft);
       if (valid.some(x => !x)) return jsonReply(res, 400, { error: 'Una o más preguntas no cumplen la validación.' });
-      const batchId = crypto.randomUUID();
+      const batchId = newId();
       const rows = valid.map(q => ({
         batch_id: batchId,
         exam_id: body.exam_id,
