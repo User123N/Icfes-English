@@ -22,7 +22,9 @@ const files = [
   'tests/generate-questions-vercel.test.mjs',
   'tests/submit-student-attempt.test.mjs',
   'tests/question-drafts.test.mjs',
-  'tests/teacher-analytics.test.mjs'
+  'tests/teacher-analytics.test.mjs',
+  'tests/media-assets.test.mjs',
+  'tests/teacher-versions.test.mjs'
 ];
 for (const file of files) {
   const result = spawnSync(process.execPath, ['--check', file], { cwd: root, encoding: 'utf8' });
