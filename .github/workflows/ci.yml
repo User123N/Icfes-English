@@ -21,7 +21,5 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Run unit tests
-        run: npm test
-      - name: Check API and portal syntax
-        run: npm run check
+      - name: Run complete verification suite
+        run: npm run verify
