@@ -2,7 +2,7 @@
 function reply(res,status,body){res.setHeader('Cache-Control','no-store');return res.status(status).json(body);}
 export default async function handler(req,res){
  if(req.method!=='POST')return reply(res,405,{error:'Usa POST.'});
- const url=process.env.SUPABASE_URL||process.env.NEXT_PUBLIC_SUPABASE_URL,anon=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,service=process.env.SUPABASE_SERVICE_ROLE_KEY,key=process.env.AI_PROVIDER_API_KEY;
+ const url=process.env.SUPABASE_URL||process.env.NEXT_PUBLIC_SUPABASE_URL,anon=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,service=(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY),key=process.env.AI_PROVIDER_API_KEY;
  if(!url||!anon||!service)return reply(res,503,{error:'Falta configurar Supabase en Vercel.'});
  if(!key)return reply(res,503,{error:'El tutor IA todavía no está habilitado: configura AI_PROVIDER_API_KEY en Vercel.'});
  const token=(req.headers.authorization||'').replace(/^Bearer\s+/i,'');if(!token)return reply(res,401,{error:'Inicia sesión.'});
