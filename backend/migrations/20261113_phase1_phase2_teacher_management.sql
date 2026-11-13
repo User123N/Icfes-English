@@ -38,6 +38,26 @@ where p.id = managed.user_id
   and p.role = 'student'
   and p.created_by is null;
 
+-- If this is a single-teacher installation and every existing school belongs
+-- to that same teacher, safely associate legacy orphan student profiles too.
+with single_teacher as (
+  select min(id::text)::uuid as id
+  from public.profiles
+  where role in ('teacher','teacher_admin')
+  having count(*) = 1
+), ownership_check as (
+  select t.id, not exists (
+    select 1 from public.schools s where s.created_by <> t.id
+  ) as all_schools_owned_by_teacher
+  from single_teacher t
+)
+update public.profiles p
+set created_by = o.id
+from ownership_check o
+where o.all_schools_owned_by_teacher = true
+  and p.role = 'student'
+  and p.created_by is null;
+
 drop policy if exists "teachers read students they manage" on public.profiles;
 create policy "teachers read students they manage"
 on public.profiles for select to authenticated
