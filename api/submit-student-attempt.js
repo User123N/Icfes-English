@@ -13,10 +13,11 @@ export default async function handler(req,res){
   if(!p[0]||p[0].role!=='student')return reply(res,403,{error:'Solo las cuentas estudiantiles pueden entregar intentos.'});
   const id=String(req.body?.attempt_id||''),answers=req.body?.answers;
   if(!/^[0-9a-f-]{36}$/i.test(id)||!answers||typeof answers!=='object'||Array.isArray(answers))return reply(res,400,{error:'Datos de entrega inválidos.'});
-  const attempts=await request('/rest/v1/exam_attempts?id=eq.'+id+'&student_id=eq.'+user.id+'&select=id,exam_id,completed_at',service);
+  const attempts=await request('/rest/v1/exam_attempts?id=eq.'+id+'&student_id=eq.'+user.id+'&select=id,exam_id,completed_at,part_number',service);
   if(!attempts[0])return reply(res,404,{error:'No se encontró el intento de este estudiante.'});
   if(attempts[0].completed_at)return reply(res,409,{error:'Esta prueba ya fue entregada.'});
-  const partFilter=attempts[0].part_number?('&part=eq.'+attempts[0].part_number):'';\n  const qs=await request('/rest/v1/questions?exam_id=eq.'+attempts[0].exam_id+'&status=eq.published'+partFilter+'&select=id,part,question,options,correct_index,explanation,difficulty&order=part',service);
+  const partFilter=attempts[0].part_number?('&part=eq.'+attempts[0].part_number):'';
+  const qs=await request('/rest/v1/questions?exam_id=eq.'+attempts[0].exam_id+'&status=eq.published'+partFilter+'&select=id,part,question,options,correct_index,explanation,difficulty&order=part',service);
   if(!qs.length)return reply(res,422,{error:'La prueba no contiene preguntas publicadas.'});
   let correct=0;const detail=qs.map((q,i)=>{const selected=Number.isInteger(answers[q.id])?answers[q.id]:null;const ok=selected===q.correct_index;if(ok)correct++;return {number:i+1,question_id:q.id,part:q.part,question:q.question,options:q.options,selected,correct_index:q.correct_index,correct:ok,explanation:q.explanation||'Revisa el concepto y vuelve a practicar.',difficulty:q.difficulty||'medium'};});
   const score=Math.round(correct/qs.length*10000)/100;
