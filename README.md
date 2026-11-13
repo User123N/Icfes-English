@@ -132,7 +132,7 @@ La migración `backend/migrations/20261113_phase3_phase4_persistence_analytics.s
 | `/api/teacher-analytics` | Métricas agregadas para el docente |
 | `/api/teacher-versions` | Historial persistente de versiones |
 | `/api/media-assets` | Almacenar imágenes de preguntas |
-| `/api/_lib/supabase-server.js` | Funciones comunes de autenticación y acceso interno a Supabase |
+| `/lib/supabase-server.js` | Funciones comunes de autenticación y acceso interno a Supabase |
 
 ## Comprobación y límites
 
