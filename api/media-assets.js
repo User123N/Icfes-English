@@ -1,4 +1,4 @@
-import { authenticateTeacher, dbRequest, jsonReply, verifyOwnedExam, writeAudit, newId } from './_lib/supabase-server.js';
+import { authenticateTeacher, dbRequest, jsonReply, verifyOwnedExam, writeAudit, newId } from '../lib/supabase-server.js';
 
 function bodyOf(req) {
   if (req.body && typeof req.body === 'object' && !Buffer.isBuffer(req.body)) return req.body;
