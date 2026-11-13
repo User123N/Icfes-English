@@ -1283,8 +1283,7 @@ async function persistPendingRemote(){
  const missing=pending.filter(q=>!isRemoteId(q.id));
  if(missing.length){
   const created=await draftRequest('POST',{action:'save',exam_id:examId,source_material:'Borradores guardados desde el Studio.',questions:missing.map(q=>({part:q.part,question:q.question,options:q.options,correct:q.correct,explanation:q.explanation}))});
-  const byContent=new Map((created.drafts||[]).map(q=>[q.question+'|'+q.part,q]));
-  pending.forEach(q=>{if(!isRemoteId(q.id)){const saved=byContent.get(q.question+'|'+q.part);if(saved){q.id=saved.id;q.batch_id=saved.batch_id;q.examId=saved.exam_id}}});
+  const createdRows=created.drafts||[];missing.forEach((q,index)=>{const saved=createdRows[index];if(saved){q.id=saved.id;q.batch_id=saved.batch_id;q.examId=saved.exam_id}});
  }
  for(const q of pending.filter(x=>isRemoteId(x.id)))await persistDraftRemote(q);
  savePending();
