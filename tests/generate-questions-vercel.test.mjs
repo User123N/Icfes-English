@@ -19,7 +19,7 @@ function response() {
     json(body) { this.body = body; return this; }
   };
 }
-function setupFetch({ role = 'teacher_admin', questions = null } = {}) {
+function setupFetch({ role = 'teacher_admin', questions = null, quota = null } = {}) {
   process.env.SUPABASE_URL = 'https://example.supabase.co';
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'public-test-key';
   process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-test-key';
@@ -28,6 +28,7 @@ function setupFetch({ role = 'teacher_admin', questions = null } = {}) {
   globalThis.fetch = async (url, options = {}) => {
     if (String(url).includes('/auth/v1/user')) return new Response(JSON.stringify({ id: 'teacher-1' }), { status: 200 });
     if (String(url).includes('/rest/v1/profiles')) return new Response(JSON.stringify([{ id: 'teacher-1', role }]), { status: 200 });
+    if (String(url).includes('/rest/v1/rpc/consume_ai_generation_quota')) return new Response(JSON.stringify([quota || { allowed: true, requests_used: 1, questions_used: 1, requests_remaining: 19, questions_remaining: 99, reset_at: '2026-11-14T00:00:00Z' }]), { status: 200 });
     return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ questions: questions || [{
       question: 'What is the main idea?', options: ['A', 'B', 'C', 'D'], correct: 0, explanation: 'It is stated in the text.'
     }] }) } }] }), { status: 200 });
@@ -61,6 +62,15 @@ test('Vercel question generator returns validated questions to teachers', t => {
       assert.equal(res.body.questions.length, 1);
       assert.equal(res.body.questions[0].part, 2);
       assert.equal(res.body.questions[0].options.length, 4);
+    });
+});
+test('Vercel question generator enforces the persistent daily quota', t => {
+  restore(t); setupFetch({ quota: { allowed: false, requests_used: 20, questions_used: 100, requests_remaining: 0, questions_remaining: 0, reset_at: '2026-11-14T00:00:00Z' } }); const res = response();
+  return handler(req({ text: 'This is a long enough passage to satisfy the minimum length requirement for a question generation test.', count: 1 }), res)
+    .then(() => {
+      assert.equal(res.statusCode, 429);
+      assert.equal(res.body.quota.requests_remaining, 0);
+      assert.equal(res.headers['Retry-After'] > 0, true);
     });
 });
 test('Vercel question generator refuses malformed AI output', t => {
