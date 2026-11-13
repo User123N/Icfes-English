@@ -25,7 +25,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return reply(res, 405, { error: 'Usa POST para generar preguntas.' });
   const url = getEnv('SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL').replace(/\/+$/, '');
   const publicKey = getEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_PUBLISHABLE_KEY', 'SUPABASE_ANON_KEY');
-  const serviceKey = getEnv('SUPABASE_SERVICE_ROLE_KEY');
+  const serviceKey = getEnv('SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_SECRET_KEY');
   const aiKey = getEnv('AI_PROVIDER_API_KEY');
   if (!url || !publicKey || !serviceKey) return reply(res, 503, { error: 'Falta configurar la conexión segura de Supabase en Vercel.' });
   if (!aiKey) return reply(res, 503, { error: 'Falta AI_PROVIDER_API_KEY en las variables de entorno de Vercel.' });
@@ -51,6 +51,37 @@ export default async function handler(req, res) {
     const profiles = await profileResponse.json();
     if (!Array.isArray(profiles) || !['teacher', 'teacher_admin'].includes(profiles[0]?.role)) {
       return reply(res, 403, { error: 'Solo una cuenta docente autorizada puede generar preguntas.' });
+    }
+    const requestLimit = Math.max(1, Math.min(1000, Number.parseInt(getEnv('AI_GENERATION_DAILY_REQUEST_LIMIT') || '20', 10) || 20));
+    const questionLimit = Math.max(1, Math.min(10000, Number.parseInt(getEnv('AI_GENERATION_DAILY_QUESTION_LIMIT') || '100', 10) || 100));
+    const quotaResponse = await fetch(url + '/rest/v1/rpc/consume_ai_generation_quota', {
+      method: 'POST',
+      headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        p_user_id: user.id,
+        p_requested_questions: count,
+        p_request_limit: requestLimit,
+        p_question_limit: questionLimit
+      })
+    });
+    const quotaRows = await quotaResponse.json().catch(() => []);
+    if (!quotaResponse.ok) {
+      console.error('AI quota check failed:', quotaRows?.message || quotaRows?.hint || quotaResponse.status);
+      return reply(res, 503, { error: 'No se pudo comprobar tu cuota diaria de IA. Inténtalo más tarde.' });
+    }
+    const quota = Array.isArray(quotaRows) ? quotaRows[0] : quotaRows;
+    if (!quota || quota.allowed !== true) {
+      res.setHeader('Retry-After', String(Math.max(1, Math.ceil((new Date(quota?.reset_at || Date.now() + 3600000).getTime() - Date.now()) / 1000))));
+      return reply(res, 429, {
+        error: 'Alcanzaste el límite diario del generador IA. Podrás volver a generar preguntas cuando se restablezca tu cuota.',
+        quota: {
+          requests_used: Number(quota?.requests_used || 0),
+          questions_used: Number(quota?.questions_used || 0),
+          requests_remaining: Number(quota?.requests_remaining || 0),
+          questions_remaining: Number(quota?.questions_remaining || 0),
+          reset_at: quota?.reset_at || null
+        }
+      });
     }
     const endpoint = getEnv('AI_API_URL') || 'https://api.openai.com/v1/chat/completions';
     let parsed;
