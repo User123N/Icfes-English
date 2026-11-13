@@ -1,115 +1,108 @@
-# ICFES English Lab Studio — Netlify + Supabase + OpenAI
+# ICFES English Lab — Vercel + Supabase + OpenAI
 
-Proyecto original conservado: la aplicación sigue en `index.html`, con sus herramientas docentes, proyección por bloques, banco local, Studio visual, borradores, importación y exportación. Esta entrega añade un primer flujo real de autenticación de docentes y un endpoint de generación con IA protegido en servidor.
+Plataforma de preparación para Inglés Saber 11 con dos espacios: un panel docente para administrar pruebas y estudiantes, y un portal estudiantil para resolver evaluaciones, practicar por partes y consultar resultados.
 
-## Requisitos
+## Arquitectura
 
-- Node.js 18 o superior.
-- Proyecto Supabase y cuenta docente autorizada.
-- Cuenta OpenAI con acceso a un modelo habilitado.
-- Sitio desplegado en Netlify para probar la función serverless.
+- **Frontend:** HTML, CSS y JavaScript en `index.html` (docente) y `student.html` (estudiante).
+- **Hosting y API:** Vercel. Las rutas serverless están en `api/`.
+- **Base de datos y autenticación:** Supabase Auth + PostgreSQL + RLS.
+- **Generación de preguntas:** proveedor compatible con la API de OpenAI, invocado únicamente desde el servidor.
 
-## Configuración de Supabase
+## Funciones actuales
 
-1. En Supabase, abre **SQL Editor** del mismo proyecto que se configurará en Netlify y ejecuta `backend/schema.sql`. Crea las tablas y políticas que necesita la app; no borra tablas ni filas. El archivo ahora puede volver a ejecutarse sin fallar por políticas duplicadas. Haz una copia de seguridad y revisa objetos existentes antes de producción. Si solo falta recuperar `profiles`, también está `backend/migrations/20261024_repair_profiles_auth.sql`.
-2. En **Authentication → Providers → Email**, habilita Email/Password.
-3. Crea la cuenta docente en **Authentication → Users**. Mantén deshabilitado el registro público si no necesitas nuevas cuentas.
-4. Después de crearla, abre SQL Editor y ejecuta `backend/assign-teacher-admin.example.sql` desde un entorno administrativo confiable, sustituyendo el correo por el de la cuenta autorizada. El script devuelve/actualiza solo el perfil del usuario que coincida:
+### Panel docente
+- Inicio de sesión y verificación de roles `teacher` / `teacher_admin`.
+- Creación, edición, duplicación, archivo y publicación de pruebas.
+- Banco de preguntas con siete partes, opciones, explicación, imágenes y bloques de lectura.
+- Liberación inmediata o programada para todos, un colegio o estudiantes seleccionados.
+- Creación de cuentas individuales o por lotes, colegios y matrículas.
+- Listado de estudiantes administrados por el docente.
+- Asignaciones individuales con fecha límite.
+- Seguimiento de intentos, filtros por prueba/estudiante/estado, análisis y exportación CSV.
+- Envío de notificaciones a estudiantes administrados.
+- Generador de preguntas con IA: crea borradores para revisión; no publica automáticamente.
 
-   ```sql
-   insert into public.profiles (id, display_name, role)
-   select id, 'Docente', 'teacher_admin'
-   from auth.users
-   where email = 'CORREO_DOCENTE';
-   ```
+### Portal estudiantil
+- Acceso mediante cuenta con rol `student`.
+- Consulta de pruebas asignadas o liberadas.
+- Pruebas completas y práctica independiente por cada una de las siete partes.
+- Guardado de respuestas durante el intento y calificación en servidor.
+- Historial con acceso al análisis detallado de las entregas.
+- Biblioteca de apuntes y vocabulario, agenda y notificaciones.
+- Tutor de inglés con IA, si está configurada la clave del proveedor.
 
-   Si ya existe el perfil, usa una actualización manual revisada en lugar de insertar duplicados. No habilites una política que permita a usuarios modificar su propio `role`.
-5. La aplicación consulta `profiles` al iniciar sesión; la función también valida el token con Supabase Auth y verifica el rol en el servidor. Una sesión válida sin el perfil `teacher_admin` no obtiene acceso.
-6. La clave `sb_publishable_...` es una clave pública de cliente, no una clave `service_role`. Se usa en el navegador. La función acepta la clave pública como `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` o `SUPABASE_ANON_KEY` para verificar usuarios con su JWT. Nunca configures `service_role` en el cliente.
+## Variables de entorno en Vercel
 
-## Variables de entorno en Netlify
+Configúralas en **Project → Settings → Environment Variables** para Production y Preview según corresponda:
 
-En **Site configuration → Environment variables**, crea:
+| Variable | Uso |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | URL HTTPS del proyecto Supabase |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Clave pública `sb_publishable_...` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Acceso privado de servidor para crear estudiantes y calificar intentos |
+| `AI_PROVIDER_API_KEY` | Clave privada del proveedor de IA |
+| `AI_MODEL` | Modelo habilitado en la cuenta; valor predeterminado `gpt-4o-mini` |
+| `AI_API_URL` | Opcional; predeterminado `https://api.openai.com/v1/chat/completions` |
 
-- `NEXT_PUBLIC_SUPABASE_URL` = `https://TU_PROYECTO.supabase.co` (la función acepta también `SUPABASE_URL`)
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` = la clave pública `sb_publishable_...` del mismo proyecto (la función acepta también `SUPABASE_ANON_KEY`)
-- `AI_PROVIDER_API_KEY` = una clave privada nueva de OpenAI, creada y pegada directamente en Netlify
-- `AI_MODEL` = modelo disponible en tu cuenta; por defecto se usa `gpt-4o-mini`, pero confirma disponibilidad en tu cuenta
-- `AI_API_URL` = opcional; si se omite, usa `https://api.openai.com/v1/chat/completions`
+El código también acepta los alias `SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_PUBLISHABLE_KEY` y `SUPABASE_ANON_KEY` para las variables de URL/clave pública.
 
-No pegues la clave privada de OpenAI en el chat, en el HTML, en GitHub ni en `.env.example`. Después de cambiar variables, vuelve a desplegar el sitio. Para desarrollo local copia `.env.example` a `.env` (sin subirlo a Git) y usa `netlify dev`; instala la CLI de Netlify localmente si aún no la tienes.
+**Nunca incluyas `SUPABASE_SERVICE_ROLE_KEY` ni `AI_PROVIDER_API_KEY` en HTML, JavaScript del navegador, GitHub o variables `NEXT_PUBLIC_*`.** No pegues credenciales privadas en el chat. Si una clave privada estuvo alguna vez en un repositorio público, rótala.
 
-## Despliegue en Netlify
+## Supabase: esquema y migraciones
 
-1. Sube el contenido de esta carpeta a un repositorio nuevo o a una rama de trabajo de tu repositorio. No se ha publicado ni modificado ningún repositorio remoto desde esta sesión.
-2. En Netlify, importa el repositorio.
-3. Usa directorio de publicación `.` y directorio de funciones `netlify/functions` (ya indicado en `netlify.toml`). No hay paso de build para el HTML estático.
-4. Añade las variables anteriores y ejecuta Deploy.
-5. Abre el sitio HTTPS, inicia sesión con el usuario de Supabase que tenga perfil `teacher_admin`, y prueba el generador. La generación solo crea borradores para revisión; no los publica automáticamente.
+La base de datos de este proyecto ya utiliza el esquema multi-prueba y de liberaciones. Las migraciones relevantes se encuentran en `backend/migrations/`:
 
-## Recuperar errores de Supabase
+1. `20261027_multiexam_multirole.sql`: pruebas, siete partes, roles, asignaciones, intentos y políticas.
+2. `20261028_scheduled_exam_releases.sql`: colegios, matrículas y liberaciones programadas.
+3. `20261113_phase1_phase2_teacher_management.sql`: propiedad de estudiantes por docente, intentos por parte, índices y políticas para listar estudiantes administrados y enviarles avisos.
 
-Si aparece `PGRST205` (no existe `public.profiles`), ejecuta `backend/schema.sql` en el SQL Editor del proyecto cuya URL aparece en Netlify, o la migración de reparación si el resto del esquema ya está instalado. Después de crear la tabla, el SQL envía `NOTIFY pgrst, 'reload schema'` para refrescar la caché REST. Si una cuenta no tiene perfil, crea el usuario en Auth y asígnale `teacher_admin` desde SQL Editor; nunca permitas que el navegador cambie el rol.
+La migración del 13 de noviembre ya fue aplicada al proyecto conectado durante esta entrega. Si se instala en otra base, respalda primero la base y aplica las migraciones en el orden indicado desde Supabase SQL Editor. No vuelvas a ejecutar una migración antigua sobre una base ya actualizada sin revisar su contenido.
 
-## Pruebas locales
+`backend/schema.sql` está pensado como esquema base para una instalación nueva; no lo ejecutes encima de una base existente sin comparar primero sus tablas, constraints y políticas.
+
+### Permisos y propiedad de estudiantes
+
+- Los estudiantes creados desde el panel guardan el docente creador en `profiles.created_by`.
+- Los estudiantes asociados a colegios del docente también pueden aparecer en su listado.
+- Las políticas RLS limitan el listado y el envío de notificaciones a estudiantes administrados por ese docente.
+- Los intentos de los estudiantes permanecen privados para el estudiante y son consultables por el docente propietario de la prueba.
+
+## Despliegue en Vercel
+
+1. Conecta el repositorio de GitHub `User123N/Icfes-English` a Vercel.
+2. Usa la rama `main` como rama de producción.
+3. Configura las variables de entorno de la sección anterior.
+4. Vercel publica los archivos HTML estáticos y las rutas serverless de `api/`.
+5. Verifica el inicio de sesión docente y estudiantil después de cada despliegue.
+
+Producción: [https://icfes-english.vercel.app](https://icfes-english.vercel.app)
+
+## Desarrollo y pruebas
+
+Requisitos: Node.js 18 o superior.
 
 ```bash
 npm test
 npm run check
 ```
 
-Las pruebas unitarias de la función usan respuestas simuladas de Supabase y OpenAI; no demuestran que tus credenciales, el proyecto Supabase o tu cuenta OpenAI funcionen. La prueba real requiere desplegar y configurar los secretos en Netlify.
+- `npm test` ejecuta pruebas unitarias con respuestas simuladas de Supabase y del proveedor de IA.
+- `npm run check` comprueba la sintaxis de las APIs, los tests y los scripts de ambos portales HTML.
+- Las pruebas simuladas no sustituyen una prueba de extremo a extremo con cuentas reales de docente/estudiante, variables configuradas y el proyecto Supabase de producción.
 
-## Límites importantes de esta entrega
+## Límites actuales conocidos
 
-- El inicio/cierre de sesión y la autorización por rol están implementados. El endpoint de IA valida sesión, rol, método, tamaño, cantidad, formato de respuesta y tiempo de espera.
-- **El banco, las preguntas aprobadas, los borradores, las versiones y la configuración visual siguen guardándose localmente en el navegador.** Aunque el esquema SQL prepara tablas con RLS, la sincronización remota de todo el estado de la aplicación aún no está conectada. No interpretes esto como persistencia multiusuario terminada.
-- No se ha ejecutado SQL ni se han hecho llamadas reales autenticadas contra tu Supabase u OpenAI. No se puede afirmar que las credenciales o el modelo funcionen hasta probarlos en tu cuenta.
-- El control de abuso por cuota/IP debe completarse con un limitador persistente (por ejemplo, una tabla RPC/Edge rate limit o un proveedor de rate limiting); el endpoint ya limita el tamaño, cantidad y duración de cada solicitud, pero eso no sustituye una cuota distribuida.
-- No se implementó publicación remota desde el panel; no hay credenciales de despliegue en el cliente.
-- El archivo `Pasted text.txt` mencionado en el encargo no estaba adjunto en los archivos disponibles para esta sesión. Se trabajó a partir del ZIP original y de los requisitos incluidos en el mensaje.
+- Los borradores creados por el generador de IA se mantienen en el almacenamiento local del navegador hasta que se aprueban y pasan al banco; la persistencia remota de la bandeja de borradores con `question_drafts` es una mejora pendiente.
+- La carga de algunos materiales, versiones del Studio y partes de la personalización visual todavía utilizan almacenamiento local. No se debe asumir que todos esos recursos se comparten entre dispositivos.
+- Los archivos e imágenes que forman parte de preguntas se sincronizan en el contenido de la pregunta; todavía falta un gestor central de almacenamiento con `media_assets` y Supabase Storage.
+- El control persistente de cuotas para el generador IA debe añadirse antes de abrirlo a un volumen elevado de usuarios.
+- Las funciones de correo transaccional, pagos, suscripciones y facturación no forman parte de esta versión.
 
-## Archivos principales
+## Seguridad
 
-- `index.html`: aplicación original con autenticación docente y diagnóstico de errores de perfil.
-- `netlify/functions/public-config.mjs`: entrega únicamente la URL y clave pública de Supabase al navegador; no devuelve claves privadas.
-- `backend/migrations/20261024_repair_profiles_auth.sql`: reparación idempotente de la tabla y política de lectura del perfil.
-- `backend/assign-teacher-admin.example.sql`: asignación explícita del rol docente desde SQL Editor confiable.
-- `backend/RECUPERAR_ACCESO_DOCENTE.md`: pasos para reparar variables, tabla, perfil y despliegue.
-- `netlify/functions/generate-questions.mjs`: endpoint de IA protegido.
-- `backend/schema.sql`: tablas y políticas RLS preparadas.
-- `backend/README-generador-ia.md`: notas de IA.
-- `.env.example`: nombres de variables, sin secretos privados.
-- `tests/`: pruebas unitarias con servicios simulados.
-
-
-## Configuración de generación segura con IA en Netlify
-
-La generación de preguntas usa `/.netlify/functions/generate-questions`. Para habilitarla:
-
-1. En Netlify abre **Site configuration → Environment variables**.
-2. Configura `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` y `AI_PROVIDER_API_KEY`. La última debe ser una clave válida del proveedor compatible con OpenAI y mantenerse únicamente en el servidor.
-3. Opcionalmente define `AI_MODEL` (por defecto `gpt-4o-mini`) y `AI_API_URL` (por defecto el endpoint oficial de OpenAI).
-4. Vuelve a desplegar el sitio para que Netlify reconstruya y publique las funciones.
-5. Inicia sesión con una cuenta cuyo perfil tenga el rol `teacher_admin` y prueba el generador en Studio avanzado.
-
-El panel consulta `public-config` para mostrar si la variable de IA está presente; este endpoint solo devuelve un indicador booleano, nunca la clave. No publiques archivos `.env.local` ni incluyas secretos en el ZIP del sitio.
-
-
-## Migración multi-prueba (27-10-2026)
-
-Para habilitar pruebas independientes, siete partes por prueba y sincronización de preguntas con Supabase, respalda la base de datos y ejecuta `backend/migrations/20261027_multiexam_multirole.sql` en el SQL Editor del proyecto. Esta migración agrega exámenes, partes, asignaciones, intentos, roles base y políticas RLS. No reemplaza una revisión de producción ni configura por sí sola pagos, facturación, almacenamiento de archivos o correos transaccionales. Configura las variables del archivo `.env.example` en Netlify; nunca publiques `.env.local` ni claves privadas.
-
-## Liberación programada de pruebas (v3)
-
-Para programar la disponibilidad de pruebas a una fecha futura, a un colegio o a estudiantes específicos:
-
-1. Haz una copia de seguridad de Supabase.
-2. Ejecuta en el SQL Editor la migración `backend/migrations/20261028_scheduled_exam_releases.sql` después de `20261027_multiexam_multirole.sql`.
-3. Verifica que la cuenta que administra la plataforma tenga un perfil autorizado y que las pruebas que se entregarán estén en estado `published`.
-4. Abre **Panel docente → Liberaciones**. Puedes programar fecha/hora de inicio y cierre opcional, desactivar o eliminar una liberación, crear colegios y matricular estudiantes mediante su UUID de Supabase Auth.
-5. Para liberar a un colegio, primero créalo y matricula sus estudiantes en la sección **Colegios y matrículas**. La fecha y el permiso se validan en la base de datos, no solo en la interfaz.
-
-Las fechas se guardan como `timestamptz`; la entrada `datetime-local` se interpreta en la zona horaria del dispositivo administrador y se convierte a UTC. Para que un estudiante pueda iniciar sesión y recibir una liberación, debe tener una cuenta y el perfil/rol correspondiente configurado en Supabase. No compartas claves `service_role` con el navegador.
-
-Esta función programa el acceso; no crea por sí sola cuentas de estudiante, pagos, suscripciones ni facturación. Verifica primero en un proyecto de prueba, especialmente las políticas RLS y las matrículas escolares, antes de usarla en producción.
+- Usa claves públicas solo en el navegador.
+- Las claves de servicio y del proveedor de IA se mantienen exclusivamente en Vercel.
+- Mantén RLS habilitado en todas las tablas expuestas en el esquema `public`.
+- No permitas que los usuarios modifiquen su propio rol.
+- Revisa los avisos de Supabase Security Advisor y habilita la protección contra contraseñas filtradas en Auth.
