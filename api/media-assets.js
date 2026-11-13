@@ -9,7 +9,7 @@ function bodyOf(req) {
 export default async function handler(req, res) {
   try {
     if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return jsonReply(res, 405, { error: 'Usa POST.' }); }
-    const ctx = await authenticateTeacher(req);
+    const ctx = await authenticateTeacher(req, ['teacher_admin']);
     const body = bodyOf(req);
     if (!body.exam_id) return jsonReply(res, 400, { error: 'Selecciona una prueba para asociar la imagen.' });
     await verifyOwnedExam(ctx, body.exam_id);
