@@ -12,7 +12,7 @@ const files = [
   'api/generate-questions.js',
   'api/submit-student-attempt.js',
   'api/student-tutor.js',
-  'api/_lib/supabase-server.js',
+  'lib/supabase-server.js',
   'api/question-drafts.js',
   'api/teacher-versions.js',
   'api/teacher-analytics.js',
