@@ -31,6 +31,7 @@ test('teacher analytics aggregates only owned exams and part results', async t =
     const target = String(url);
     if (target.includes('/auth/v1/user')) return new Response(JSON.stringify({ id: teacherId }), { status: 200 });
     if (target.includes('/rest/v1/profiles?id=eq.')) return new Response(JSON.stringify([{ id: teacherId, role: 'teacher_admin' }]), { status: 200 });
+    if (target.includes('/rest/v1/profiles?created_by=')) return new Response('[]', { status: 200 });
     if (target.includes('/rest/v1/exams?owner_id=')) return new Response(JSON.stringify([{ id: examId, title: 'Prueba de ejemplo', status: 'published', created_at: new Date().toISOString() }]), { status: 200 });
     if (target.includes('/rest/v1/exam_attempts?')) return new Response(JSON.stringify([{
       id: '44444444-4444-4444-8444-444444444444', exam_id: examId, student_id: studentId, score: 80, completed_at: new Date().toISOString(), created_at: new Date().toISOString(),
