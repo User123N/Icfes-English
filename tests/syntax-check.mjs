@@ -17,6 +17,8 @@ const files = [
   'api/teacher-versions.js',
   'api/teacher-analytics.js',
   'api/media-assets.js',
+  'api/ai-usage.js',
+  'api/health.js',
   'tests/public-config.test.mjs',
   'tests/generate-questions.test.mjs',
   'tests/generate-questions-vercel.test.mjs',
@@ -24,7 +26,10 @@ const files = [
   'tests/question-drafts.test.mjs',
   'tests/teacher-analytics.test.mjs',
   'tests/media-assets.test.mjs',
-  'tests/teacher-versions.test.mjs'
+  'tests/teacher-versions.test.mjs',
+  'tests/ai-usage.test.mjs',
+  'tests/health.test.mjs',
+  'tests/release-readiness.mjs'
 ];
 for (const file of files) {
   const result = spawnSync(process.execPath, ['--check', file], { cwd: root, encoding: 'utf8' });
