@@ -3,16 +3,17 @@ const USERNAME_RE=/^[a-zA-Z0-9._-]{3,32}$/;
 const EMAIL_DOMAIN='students.icfeslab.app';
 function reply(res,status,body){res.setHeader('Cache-Control','no-store');res.setHeader('Content-Type','application/json; charset=utf-8');return res.status(status).json(body);}
 async function sb(path,{key,token,method='GET',body}){
- const r=await fetch((process.env.SUPABASE_URL||process.env.NEXT_PUBLIC_SUPABASE_URL).replace(/\/$/, '')+path,{method,headers:{apikey:key,Authorization:'Bearer '+(token||key),'Content-Type':'application/json',Prefer:'return=representation'},...(body?{body:JSON.stringify(body)}:{})});
+ const base=String(process.env.SUPABASE_URL||process.env.NEXT_PUBLIC_SUPABASE_URL||'').trim().replace(/\/+$/, '');
+ const r=await fetch(base+path,{method,headers:{apikey:key,Authorization:'Bearer '+(token||key),'Content-Type':'application/json',Prefer:'return=representation'},...(body?{body:JSON.stringify(body)}:{})});
  const data=await r.json().catch(()=>({}));
  if(!r.ok)throw new Error(data.msg||data.message||data.error_description||data.error||('Supabase '+r.status));
  return data;
 }
 export default async function handler(req,res){
  if(req.method!=='POST')return reply(res,405,{error:'Usa POST.'});
- const url=process.env.SUPABASE_URL||process.env.NEXT_PUBLIC_SUPABASE_URL;
- const anon=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY||process.env.SUPABASE_ANON_KEY;
- const service=process.env.SUPABASE_SERVICE_ROLE_KEY;
+ const url=String(process.env.SUPABASE_URL||process.env.NEXT_PUBLIC_SUPABASE_URL||'').trim().replace(/\\/+$/, '');
+ const anon=String(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY||process.env.SUPABASE_PUBLISHABLE_KEY||process.env.SUPABASE_ANON_KEY||'').trim();
+ const service=String(process.env.SUPABASE_SERVICE_ROLE_KEY||'').trim();
  if(!url||!anon||!service)return reply(res,503,{error:'Configura SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY y la clave pública en Vercel.'});
  const bearer=(req.headers.authorization||'').replace(/^Bearer\s+/i,'');
  if(!bearer)return reply(res,401,{error:'Debes iniciar sesión como docente.'});
