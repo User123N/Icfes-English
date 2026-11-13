@@ -37,7 +37,7 @@ export default async function handler(req,res){
     if(existing.length){results.push({row:i+1,username,ok:false,error:'Ese usuario ya existe.'});continue;}
     const created=await sb('/auth/v1/admin/users',{key:service,method:'POST',body:{email,password,email_confirm:true,user_metadata:{display_name:displayName,username,account_type:'student'}}});
     try{
-     await sb('/rest/v1/profiles',{key:service,method:'POST',body:{id:created.id,display_name:displayName,role:'student',username}});if(req.body?.school_id){await sb('/rest/v1/school_memberships',{key:service,method:'POST',body:{school_id:req.body.school_id,user_id:created.id,membership_role:'student'}})}
+     await sb('/rest/v1/profiles',{key:service,method:'POST',body:{id:created.id,display_name:displayName,role:'student',username,created_by:actor.id}});if(req.body?.school_id){await sb('/rest/v1/school_memberships',{key:service,method:'POST',body:{school_id:req.body.school_id,user_id:created.id,membership_role:'student'}})}
      results.push({row:i+1,username,display_name:displayName,ok:true});
     }catch(e){await sb('/auth/v1/admin/users/'+created.id,{key:service,method:'DELETE'}).catch(()=>{});throw e;}
    }catch(e){results.push({row:i+1,username,ok:false,error:e.message||'No se pudo crear la cuenta.'});}
