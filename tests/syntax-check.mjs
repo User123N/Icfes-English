@@ -13,7 +13,9 @@ const files = [
   'api/submit-student-attempt.js',
   'api/student-tutor.js',
   'tests/public-config.test.mjs',
-  'tests/generate-questions.test.mjs'
+  'tests/generate-questions.test.mjs',
+  'tests/generate-questions-vercel.test.mjs',
+  'tests/submit-student-attempt.test.mjs'
 ];
 for (const file of files) {
   const result = spawnSync(process.execPath, ['--check', file], { cwd: root, encoding: 'utf8' });
@@ -22,7 +24,7 @@ for (const file of files) {
 const htmlFiles = ['index.html', 'student.html'];
 const scripts = htmlFiles.flatMap(htmlFile => {
   const html = fs.readFileSync(path.join(root, htmlFile), 'utf8');
-  return [...html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)].map(m => ({ htmlFile, code: m[1] })).filter(x => x.code.trim());
+  return [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m => ({ htmlFile, code: m[1] })).filter(x => x.code.trim());
 });
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'icfes-inline-check-'));
 try {
