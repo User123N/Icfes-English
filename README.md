@@ -106,3 +106,38 @@ npm run check
 - Mantén RLS habilitado en todas las tablas expuestas en el esquema `public`.
 - No permitas que los usuarios modifiquen su propio rol.
 - Revisa los avisos de Supabase Security Advisor y habilita la protección contra contraseñas filtradas en Auth.
+
+## Fase 3 — IA con revisión y borradores persistentes
+
+El generador utiliza `POST /api/generate-questions` y crea elementos en `public.question_drafts` mediante `/api/question-drafts`. Los borradores quedan asociados al docente y al examen, se pueden editar/rechazar/aprobar desde Studio y solo al aprobarse pasan a `public.questions` con estado `draft`. La aprobación no publica el examen automáticamente.
+
+La lista pendiente se consulta en Supabase, por lo que se mantiene al cambiar de navegador o dispositivo. Los cambios de revisión están protegidos por sesión docente, propiedad del examen y RLS.
+
+## Fase 4 — Analítica, versiones compartidas y biblioteca
+
+- `GET /api/teacher-analytics`: resumen docente, aciertos por parte, distribución de puntajes, actividad diaria y rendimiento por examen (hasta 90 días de consulta).
+- `GET/POST /api/teacher-versions`: historial compartido de instantáneas, restringido al rol `teacher_admin`.
+- `POST /api/media-assets`: carga de imágenes de pregunta a Supabase Storage, validando sesión, propietario del examen, MIME y tamaño.
+- Bucket `question-media`: lectura pública para que los estudiantes visualicen recursos del examen; escritura/actualización/borrado limitados a docentes sobre su propia carpeta.
+- El sincronizador de preguntas sube imágenes base64 al bucket y guarda `image_path` en la fila de pregunta, evitando almacenar base64 como contenido principal.
+- El portal del estudiante permite guardar preguntas para repasarlas desde su biblioteca y marcar notificaciones como leídas.
+
+La migración `backend/migrations/20261113_phase3_phase4_persistence_analytics.sql` ya fue aplicada al proyecto conectado. En una base nueva o diferente, respalda primero y aplica las migraciones compatibles con el esquema de destino.
+
+## Rutas serverless añadidas
+
+| Ruta | Propósito |
+|---|---|
+| `/api/question-drafts` | Consultar, guardar, editar, aprobar y rechazar borradores IA |
+| `/api/teacher-analytics` | Métricas agregadas para el docente |
+| `/api/teacher-versions` | Historial persistente de versiones |
+| `/api/media-assets` | Almacenar imágenes de preguntas |
+| `/api/_lib/supabase-server.js` | Funciones comunes de autenticación y acceso interno a Supabase |
+
+## Comprobación y límites
+
+Las pruebas automatizadas incluyen casos simulados de persistencia de borradores, autorización de versiones, carga de imágenes y agregación de analítica, además de comprobación de sintaxis para los dos portales. Las simulaciones no equivalen a una prueba de extremo a extremo con credenciales reales.
+
+El generador y el tutor IA necesitan `AI_PROVIDER_API_KEY` configurada en Production en Vercel. Esa variable no debe exponerse en el navegador ni compartirse en el chat. La carga de imágenes acepta JPG, PNG, WEBP y GIF de hasta 4 MB; el formulario docente actual limita también el tamaño de imagen antes de sincronizar.
+
+Las versiones compartidas están limitadas a 3 MB por instantánea. Para respaldos grandes, exporta el banco y conserva por separado los archivos originales.
