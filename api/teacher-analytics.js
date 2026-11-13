@@ -9,6 +9,7 @@ export default async function handler(req, res) {
     const ctx = await authenticateTeacher(req);
     const url = new URL(req.url, 'https://icfes-english.invalid');
     const days = Math.min(90, Math.max(7, Number(url.searchParams.get('days') || 30)));
+    const since = new Date(Date.now() - days * 86400000).toISOString();
     const exams = await dbRequest(ctx, '/rest/v1/exams?owner_id=eq.' + encodeURIComponent(ctx.user.id) + '&select=id,title,status,created_at&order=created_at.desc');
     const examIds = (exams || []).map(x => x.id);
     if (!examIds.length) {
@@ -16,7 +17,7 @@ export default async function handler(req, res) {
     }
     const filter = encodeURIComponent(inFilter(examIds));
     const [attempts, questions, ownedStudents, schools] = await Promise.all([
-      dbRequest(ctx, '/rest/v1/exam_attempts?exam_id=in.' + filter + '&select=id,exam_id,student_id,score,completed_at,created_at,result_detail,part_number&order=created_at.desc&limit=5000'),
+      dbRequest(ctx, '/rest/v1/exam_attempts?exam_id=in.' + filter + '&created_at=gte.' + encodeURIComponent(since) + '&select=id,exam_id,student_id,score,completed_at,created_at,result_detail,part_number&order=created_at.desc&limit=5000'),
       dbRequest(ctx, '/rest/v1/questions?owner_id=eq.' + encodeURIComponent(ctx.user.id) + '&exam_id=in.' + filter + '&select=id,exam_id,part,status&limit=10000'),
       dbRequest(ctx, '/rest/v1/profiles?created_by=eq.' + encodeURIComponent(ctx.user.id) + '&role=eq.student&select=id,display_name,username'),
       dbRequest(ctx, '/rest/v1/schools?created_by=eq.' + encodeURIComponent(ctx.user.id) + '&select=id')
