@@ -1,4 +1,4 @@
-import { authenticateTeacher, dbRequest, jsonReply } from './_lib/supabase-server.js';
+import { authenticateTeacher, dbRequest, jsonReply } from '../lib/supabase-server.js';
 
 function inFilter(ids) { return '(' + ids.map(id => '"' + id + '"').join(',') + ')'; }
 function safeAverage(values) { return values.length ? Math.round(values.reduce((a,b)=>a+b,0) / values.length * 10) / 10 : null; }
