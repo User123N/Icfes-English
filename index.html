@@ -1201,19 +1201,123 @@ $('stBackupAll').onclick=()=>$('stExport').click();
 $('stDownloadHTML').onclick=()=>download('index.html','<!DOCTYPE html>\\n'+document.documentElement.outerHTML,'text/html;charset=utf-8');
 $('stPrepare').onclick=()=>{let qs=state.questions||[],issues=[];if(!qs.length)issues.push('No hay preguntas en el banco.');qs.forEach((q,i)=>{if(!q.question&&!q.text)issues.push('Pregunta '+(i+1)+': falta enunciado.');if(!Array.isArray(q.options)||q.options.length<4)issues.push('Pregunta '+(i+1)+': faltan cuatro opciones.');if(!Number.isInteger(Number(q.correct))||Number(q.correct)<0||Number(q.correct)>3)issues.push('Pregunta '+(i+1)+': respuesta correcta inválida.');});$('stPublishStatus').textContent=issues.length?'Validación encontró '+issues.length+' problema(s):\\n• '+issues.slice(0,25).join('\\n• '):'Validación básica correcta. '+qs.length+' preguntas detectadas.\\nSiguiente paso: exportar el proyecto y desplegarlo manualmente o conectar un servicio de publicación real.';log('Ejecutó validación de publicación: '+issues.length+' incidencias')};
 $('stExportQuestions').onclick=()=>{let qs=state.questions||[],csv=['id,parte,pregunta,opcion_a,opcion_b,opcion_c,opcion_d,correcta,explicacion',...qs.map((q,i)=>[q.id??i+1,q.part,q.question||q.text,(q.options||[])[0],(q.options||[])[1],(q.options||[])[2],(q.options||[])[3],q.correct,q.explanation].map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(','))].join('\\r\\n');download('banco-preguntas.csv','\\ufeff'+csv,'text/csv;charset=utf-8')};
-// Borradores generados: no se publican hasta aprobación manual.
-const PENDING_KEY='icfes_question_drafts_v1';let pending=[];try{pending=JSON.parse(localStorage.getItem(PENDING_KEY)||'[]');if(!Array.isArray(pending))pending=[]}catch(e){pending=[]}
+// Los borradores IA se guardan en Supabase para que el panel docente pueda revisarlos desde cualquier dispositivo.
+const PENDING_KEY='icfes_question_drafts_v1';let pending=[];
+try{pending=JSON.parse(localStorage.getItem(PENDING_KEY)||'[]');if(!Array.isArray(pending))pending=[]}catch(e){pending=[]}
 const savePending=()=>{try{localStorage.setItem(PENDING_KEY,JSON.stringify(pending));return true}catch(e){$('stMaterialStatus').textContent='No hay espacio en el almacenamiento local.';return false}};
 const genStatus=m=>$('stMaterialStatus').textContent=m;
-fetch('/api/public-config',{headers:{'Accept':'application/json'},cache:'no-store'}).then(async r=>{const c=await r.json().catch(()=>({}));if(!r.ok)throw Error(c.error||'No se pudo consultar la configuración de Vercel.');if(c.aiGenerationConfigured)genStatus('Servicio de IA configurado. Si la función acaba de cambiar, vuelve a desplegar el proyecto en Vercel.');else genStatus('Falta AI_PROVIDER_API_KEY en las variables de entorno del proyecto en Vercel. Añádela en Settings → Environment Variables y vuelve a desplegar.');}).catch(e=>genStatus('No se pudo comprobar la configuración de IA: '+(e.message||'error de conexión')+'. Verifica el despliegue de Vercel.'));
-function renderDrafts(){let host=$('stQuestionPreview');if(!host)return;host.innerHTML=pending.length?pending.map((q,i)=>`<article class="studio-card" style="padding:14px"><div class="eyebrow">BORRADOR ${i+1} · PARTE ${q.part}</div><label>Enunciado</label><textarea data-f="question" data-i="${i}" rows="3">${esc(q.question)}</textarea><div class="form-grid">${q.options.map((o,j)=>`<div class="field"><label>Opción ${'ABCD'[j]}</label><input data-o="${j}" data-i="${i}" value="${esc(o)}"></div>`).join('')}</div><label>Respuesta correcta</label><select data-f="correct" data-i="${i}">${[0,1,2,3].map(j=>`<option value="${j}" ${Number(q.correct)===j?'selected':''}>${'ABCD'[j]}</option>`).join('')}</select><label>Explicación</label><textarea data-f="explanation" data-i="${i}" rows="2">${esc(q.explanation)}</textarea><div class="studio-actions"><label><input type="checkbox" class="stDraftCheck" data-i="${i}" style="width:auto"> Seleccionar</label><button class="ghost-btn" data-remove="${i}">Rechazar</button></div></article>`).join(''):'<div class="studio-note">Aún no hay borradores.</div>';$('stDraftCount').textContent=`${pending.length} pregunta(s) en revisión`;$('stApproveSelected').disabled=!pending.length;$('stApproveAll').disabled=!pending.length;$('stRejectAll').disabled=!pending.length;
-host.querySelectorAll('[data-f],[data-o]').forEach(el=>el.addEventListener('change',()=>{let i=+el.dataset.i,q=pending[i];if(el.dataset.f==='correct')q.correct=+el.value;else if(el.dataset.f)q[el.dataset.f]=el.value;else q.options[+el.dataset.o]=el.value;savePending()}));host.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{pending.splice(+b.dataset.remove,1);savePending();renderDrafts()})}
-function approveDrafts(indices){let count=0;indices.sort((a,b)=>b-a).forEach(i=>{let q=pending[i];if(!q)return;if(!q.question.trim()||q.options.length!==4||q.options.some(x=>!String(x).trim())||![0,1,2,3].includes(+q.correct)){genStatus('Hay una pregunta incompleta. Revisa enunciado, cuatro opciones y respuesta correcta.');return}state.questions.push({id:'ai-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),part:+q.part,question:q.question,options:q.options,correct:+q.correct,explanation:q.explanation});pending.splice(i,1);count++});if(count){persist();log('Aprobó '+count+' pregunta(s) generadas');genStatus(`${count} pregunta(s) añadidas al banco local. Los datos no se sincronizan con otros dispositivos.`)}savePending();renderDrafts();audit()}
-$('stApproveSelected').onclick=()=>approveDrafts([...$('stQuestionPreview').querySelectorAll('.stDraftCheck:checked')].map(x=>+x.dataset.i));$('stApproveAll').onclick=()=>approveDrafts(pending.map((_,i)=>i));$('stRejectAll').onclick=()=>{if(confirm('¿Borrar todos los borradores?')){pending=[];savePending();renderDrafts();genStatus('Borradores rechazados.')}};
+const isRemoteId=v=>/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(v||''));
+async function draftRequest(method,body,examId){
+ const session=window.icfesGetSession?await window.icfesGetSession():null;
+ if(!session?.access_token)throw new Error('Inicia sesión con una cuenta docente.');
+ const suffix=examId?'?exam_id='+encodeURIComponent(examId):'';
+ const response=await fetch('/api/question-drafts'+suffix,{method,headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},...(body?{body:JSON.stringify(body)}:{})});
+ const payload=await response.json().catch(()=>({}));
+ if(!response.ok)throw new Error(payload.error||'No se pudo sincronizar los borradores.');
+ return payload;
+}
+async function loadPersistentDrafts(){
+ const examId=state.activeExamId;
+ if(!isRemoteId(examId)||!window.icfesGetSession)return;
+ try{
+  const local=pending.slice();
+  const result=await draftRequest('GET',null,examId);
+  let rows=result.drafts||[];
+  if(!rows.length&&local.length){
+   const migration=await draftRequest('POST',{action:'save',exam_id:examId,source_material:'Borrador local migrado al historial compartido.',questions:local.map(q=>({part:q.part,question:q.question,options:q.options,correct:q.correct,explanation:q.explanation}))});
+   rows=migration.drafts||[];
+  }
+  pending=rows.map(q=>({id:q.id,batch_id:q.batch_id,examId:q.exam_id,part:q.part,question:q.question,options:q.options,correct:q.correct_index,explanation:q.explanation||'',status:q.status}));
+  savePending();renderDrafts();
+  genStatus(rows.length?rows.length+' borrador(es) pendientes cargados desde Supabase.':'Los borradores de este examen están sincronizados y no hay preguntas pendientes.');
+ }catch(e){genStatus('No se pudieron cargar los borradores compartidos: '+e.message)}
+}
+async function persistDraftRemote(q){
+ if(!q||!isRemoteId(q.id))return;
+ try{await draftRequest('PATCH',{action:'update',id:q.id,question:{part:q.part,question:q.question,options:q.options,correct:q.correct,explanation:q.explanation}})}
+ catch(e){genStatus('Cambio guardado localmente, pero no se sincronizó: '+e.message)}
+}
+async function persistPendingRemote(){
+ const examId=state.activeExamId;
+ if(!isRemoteId(examId))throw new Error('Primero sincroniza o crea una prueba en Supabase.');
+ const missing=pending.filter(q=>!isRemoteId(q.id));
+ if(missing.length){
+  const created=await draftRequest('POST',{action:'save',exam_id:examId,source_material:'Borradores guardados desde el Studio.',questions:missing.map(q=>({part:q.part,question:q.question,options:q.options,correct:q.correct,explanation:q.explanation}))});
+  const byContent=new Map((created.drafts||[]).map(q=>[q.question+'|'+q.part,q]));
+  pending.forEach(q=>{if(!isRemoteId(q.id)){const saved=byContent.get(q.question+'|'+q.part);if(saved){q.id=saved.id;q.batch_id=saved.batch_id;q.examId=saved.exam_id}}});
+ }
+ for(const q of pending.filter(x=>isRemoteId(x.id)))await persistDraftRemote(q);
+ savePending();
+}
+function renderDrafts(){
+ let host=$('stQuestionPreview');if(!host)return;
+ host.innerHTML=pending.length?pending.map((q,i)=>`<article class="studio-card" style="padding:14px"><div class="eyebrow">BORRADOR ${i+1} · PARTE ${q.part}</div><label>Enunciado</label><textarea data-f="question" data-i="${i}" rows="3">${esc(q.question)}</textarea><div class="form-grid">${q.options.map((o,j)=>`<div class="field"><label>Opción ${'ABCD'[j]}</label><input data-o="${j}" data-i="${i}" value="${esc(o)}"></div>`).join('')}</div><label>Respuesta correcta</label><select data-f="correct" data-i="${i}">${q.options.map((o,j)=>`<option value="${j}" ${Number(q.correct)===j?'selected':''}>${'ABCD'[j]}</option>`).join('')}</select><label>Explicación</label><textarea data-f="explanation" data-i="${i}" rows="2">${esc(q.explanation)}</textarea><div class="studio-actions"><label><input type="checkbox" class="stDraftCheck" data-i="${i}" style="width:auto"> Seleccionar</label><button class="ghost-btn" data-remove="${i}">Rechazar</button></div></article>`).join(''):'<div class="studio-note">Aún no hay borradores pendientes para esta prueba.</div>';
+ $('stDraftCount').textContent=`${pending.length} pregunta(s) en revisión`;$('stApproveSelected').disabled=!pending.length;$('stApproveAll').disabled=!pending.length;$('stRejectAll').disabled=!pending.length;
+ host.querySelectorAll('[data-f],[data-o]').forEach(el=>el.addEventListener('change',async()=>{
+  const i=+el.dataset.i,q=pending[i];if(!q)return;
+  if(el.dataset.f==='correct')q.correct=+el.value;else if(el.dataset.f)q[el.dataset.f]=el.value;else q.options[+el.dataset.o]=el.value;
+  savePending();await persistDraftRemote(q);
+ }));
+ host.querySelectorAll('[data-remove]').forEach(b=>b.onclick=async()=>{
+  const i=+b.dataset.remove,q=pending[i];if(!q)return;
+  if(isRemoteId(q.id)){try{await draftRequest('PATCH',{action:'review',decision:'rejected',ids:[q.id]})}catch(e){genStatus('No se pudo rechazar el borrador: '+e.message);return}}
+  pending.splice(i,1);savePending();renderDrafts();genStatus('Borrador rechazado. No se añadió al banco de preguntas.');
+ });
+}
+async function reviewDrafts(indices,decision){
+ const selected=[...new Set(indices)].map(i=>pending[i]).filter(Boolean);
+ if(!selected.length)return;
+ for(const q of selected){if(!String(q.question||'').trim()||!Array.isArray(q.options)||q.options.length<2||q.options.length>4||q.options.some(x=>!String(x).trim())||!Number.isInteger(+q.correct)||+q.correct<0||+q.correct>=q.options.length){genStatus('Hay una pregunta incompleta. Revisa enunciado, opciones y respuesta correcta.');return}}
+ try{
+  await persistPendingRemote();
+  const ids=selected.map(q=>q.id).filter(isRemoteId);
+  if(ids.length!==selected.length)throw new Error('Uno o más borradores no quedaron guardados en la nube.');
+  const result=await draftRequest('PATCH',{action:'review',decision,ids});
+  if(decision==='approved'){
+   const approved=(result.questions||[]).map(q=>({id:q.client_id||q.id,examId:q.exam_id,part:q.part,question:q.question,options:q.options,correct:q.correct_index,explanation:q.explanation||'',status:'draft',image:q.image_path||'',imagePath:q.image_path||null}));
+   state.questions=state.questions.filter(old=>!approved.some(q=>q.id===old.id));
+   state.questions.push(...approved);persist();await syncStateToCloud();
+   log('Aprobó '+approved.length+' pregunta(s) del generador IA');
+   genStatus(`${approved.length} pregunta(s) aprobadas y añadidas al banco como borradores. Publícalas cuando termines de revisar el examen.`);
+  }else{log('Rechazó '+selected.length+' pregunta(s) IA');genStatus(`${selected.length} borrador(es) rechazados.`)}
+  const idsSet=new Set(ids);pending=pending.filter(q=>!idsSet.has(q.id));savePending();renderDrafts();renderQuestionList();audit();
+ }catch(e){genStatus('No se pudo completar la revisión: '+e.message)}
+}
+$('stApproveSelected').onclick=()=>reviewDrafts([...$('stQuestionPreview').querySelectorAll('.stDraftCheck:checked')].map(x=>+x.dataset.i),'approved');
+$('stApproveAll').onclick=()=>reviewDrafts(pending.map((_,i)=>i),'approved');
+$('stRejectAll').onclick=()=>{if(confirm('¿Rechazar todos los borradores pendientes?'))reviewDrafts(pending.map((_,i)=>i),'rejected')};
 async function extractMaterial(f){if(f.size>12*1024*1024)throw Error('El archivo supera 12 MB.');let n=f.name.toLowerCase();if(/\.(txt|md|csv|json)$/.test(n))return f.text();if(n.endsWith('.pdf')){if(!window.pdfjsLib)await new Promise((ok,no)=>{let x=document.createElement('script');x.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';x.onload=ok;x.onerror=()=>no(Error('No se pudo cargar lector PDF; pega el texto manualmente.'));document.head.appendChild(x)});pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';let d=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise,a=[];for(let i=1;i<=d.numPages;i++){let pg=await d.getPage(i),c=await pg.getTextContent();a.push(c.items.map(x=>x.str).join(' '))}return a.join('\n')}if(n.endsWith('.docx')){if(!window.mammoth)await new Promise((ok,no)=>{let x=document.createElement('script');x.src='https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js';x.onload=ok;x.onerror=()=>no(Error('No se pudo cargar lector Word; pega el texto manualmente.'));document.head.appendChild(x)});return (await mammoth.extractRawText({arrayBuffer:await f.arrayBuffer()})).value}throw Error('Formato no compatible. Usa TXT, MD, CSV, JSON, PDF o DOCX.')}
 $('stMaterialFile').onchange=async()=>{let f=$('stMaterialFile').files[0];if(!f)return;genStatus('Leyendo archivo…');try{$('stMaterialText').value=(await extractMaterial(f)).slice(0,90000);genStatus('Texto extraído. Revísalo y pulsa Generar vista previa.')}catch(e){genStatus(e.message)}};
-$('stGenerateQuestions').onclick=async()=>{let text=$('stMaterialText').value.trim();if(text.length<80){genStatus('Pega o carga al menos 80 caracteres de contenido.');return}let b=$('stGenerateQuestions');b.disabled=true;b.textContent='Generando…';genStatus('Solicitando preguntas al servicio de IA seguro…');try{let session=window.icfesGetSession?await window.icfesGetSession():null;if(!session||!session.access_token)throw Error('Inicia sesión como docente autorizado para generar preguntas.');let r=await fetch('/api/generate-questions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({text:text.slice(0,90000),count:+$('stMaterialCount').value,part:+$('stMaterialPart').value})}),d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||`Error del servicio (${r.status}).`);if(!Array.isArray(d.questions))throw Error('La respuesta del servicio no contiene preguntas.');let made=d.questions.map(q=>({part:+q.part||+$('stMaterialPart').value,question:String(q.question||''),options:Array.isArray(q.options)?q.options.slice(0,4).map(String):[],correct:+q.correct,explanation:String(q.explanation||'')})).filter(q=>q.question&&q.options.length===4&&[0,1,2,3].includes(q.correct));if(!made.length)throw Error('No se recibieron preguntas válidas.');pending.push(...made);savePending();renderDrafts();genStatus(`Se generaron ${made.length} borradores. Revísalos y apruébalos manualmente.`);log('Generó '+made.length+' borrador(es) desde material')}catch(e){genStatus((e.message||'Falló la generación')+' No se publicó ni añadió ninguna pregunta. Revisa la configuración de Vercel si el error persiste.')}finally{b.disabled=false;b.textContent='Generar vista previa'}};
+$('stGenerateQuestions').onclick=async()=>{
+ let text=$('stMaterialText').value.trim();
+ if(text.length<80){genStatus('Pega o carga al menos 80 caracteres de contenido.');return}
+ let b=$('stGenerateQuestions');b.disabled=true;b.textContent='Generando…';genStatus('Solicitando preguntas al servicio de IA seguro…');
+ try{
+  let session=window.icfesGetSession?await window.icfesGetSession():null;
+  if(!session?.access_token)throw Error('Inicia sesión como docente autorizado para generar preguntas.');
+  await flushCloudSync();
+  let response=await fetch('/api/generate-questions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({text:text.slice(0,90000),count:+$('stMaterialCount').value,part:+$('stMaterialPart').value})});
+  let data=await response.json().catch(()=>({}));if(!response.ok)throw Error(data.error||`Error del servicio (${response.status}).`);
+  if(!Array.isArray(data.questions))throw Error('La respuesta del servicio no contiene preguntas.');
+  let made=data.questions.map(q=>({part:+q.part||+$('stMaterialPart').value,question:String(q.question||''),options:Array.isArray(q.options)?q.options.slice(0,4).map(String):[],correct:+q.correct,explanation:String(q.explanation||'')})).filter(q=>q.question&&q.options.length===4&&[0,1,2,3].includes(q.correct));
+  if(!made.length)throw Error('No se recibieron preguntas válidas.');
+  if(!isRemoteId(state.activeExamId))throw Error('No se pudo identificar la prueba activa en Supabase.');
+  try{
+   let saved=await draftRequest('POST',{action:'save',exam_id:state.activeExamId,source_material:text,questions:made});
+   pending.push(...(saved.drafts||[]).map(q=>({id:q.id,batch_id:q.batch_id,examId:q.exam_id,part:q.part,question:q.question,options:q.options,correct:q.correct_index,explanation:q.explanation||'',status:q.status})));
+   savePending();renderDrafts();genStatus(`Se generaron y guardaron ${made.length} borradores en Supabase. Revísalos y apruébalos manualmente.`);
+  }catch(saveError){
+   pending.push(...made);savePending();renderDrafts();
+   throw new Error('La IA generó preguntas, pero no se pudieron guardar en la nube. Quedaron como copia local: '+saveError.message);
+  }
+  log('Generó '+made.length+' borrador(es) desde material');
+ }catch(e){genStatus((e.message||'Falló la generación')+' No se publicó ninguna pregunta. Revisa la configuración de Vercel si el error persiste.')}
+ finally{b.disabled=false;b.textContent='Generar vista previa'}
+};
 renderDrafts();
+window.addEventListener('icfes-auth-ready',()=>loadPersistentDrafts());
+document.getElementById('activeExamSelect')?.addEventListener('change',()=>loadPersistentDrafts());
+if(window.icfesGetSession&&window.icfesSupabase)loadPersistentDrafts();
 $('stAuditBtn').onclick=()=>audit();
 function audit(){let qs=state.questions||[],missing=qs.filter(q=>!(q.question||q.text)).length,bad=qs.filter(q=>!Array.isArray(q.options)||q.options.length!==4).length,correct=qs.filter(q=>![0,1,2,3].includes(Number(q.correct))).length;$('stAudit').innerHTML=`<div class="studio-kpis"><div class="studio-kpi"><span class="muted small">Total</span><b>${qs.length}</b></div><div class="studio-kpi"><span class="muted small">Sin enunciado</span><b>${missing}</b></div><div class="studio-kpi"><span class="muted small">Con errores</span><b>${bad+correct}</b></div></div><p class="muted small" style="margin-top:10px">${bad||correct||missing?'Revisa las preguntas señaladas desde la pestaña Preguntas.':'No se detectaron errores estructurales básicos.'}</p>`}
 $('stVersions').innerHTML=db.versions.length?db.versions.map((v,i)=>`<div class="studio-version"><div><b>${esc(v.label)}</b><small>${esc(v.at)} · ${Object.keys(v.appState||{}).length} campos de estado</small></div><button class="ghost-btn" data-v="${i}">Exportar</button></div>`).join(''):'<p class="muted small">Aún no hay versiones. Crea una instantánea para iniciar el historial.</p>';
