@@ -12,10 +12,17 @@ const files = [
   'api/generate-questions.js',
   'api/submit-student-attempt.js',
   'api/student-tutor.js',
+  'api/_lib/supabase-server.js',
+  'api/question-drafts.js',
+  'api/teacher-versions.js',
+  'api/teacher-analytics.js',
+  'api/media-assets.js',
   'tests/public-config.test.mjs',
   'tests/generate-questions.test.mjs',
   'tests/generate-questions-vercel.test.mjs',
-  'tests/submit-student-attempt.test.mjs'
+  'tests/submit-student-attempt.test.mjs',
+  'tests/question-drafts.test.mjs',
+  'tests/teacher-analytics.test.mjs'
 ];
 for (const file of files) {
   const result = spawnSync(process.execPath, ['--check', file], { cwd: root, encoding: 'utf8' });
